@@ -43,6 +43,14 @@ import {
   SystemSettings,
 } from "../types";
 import { clientDb } from "../clientDb";
+import { apiGetUsers, apiGetUsersByRole } from "../api/auth";
+import {
+  apiGetDemandes,
+  apiGetDevis,
+  apiUpdateDemande,
+  apiCreateDevis,
+  apiUpdateDevis,
+} from "../api/quotes";
 
 interface AdminViewProps {
   currentUser: User;
@@ -92,6 +100,46 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
   }, [token]);
 
   const fetchAdminData = async () => {
+    // Try API for users / demandes / devis
+    try {
+      const demandes = await apiGetDemandes();
+      if (demandes && demandes.length > 0) {
+        const mapped: QuoteRequest[] = demandes.map((d: any) => ({
+          id: d._id,
+          userId: typeof d.client === 'object' ? d.client._id : d.client,
+          clientName: typeof d.client === 'object' ? d.client.fullname : '',
+          company: '',
+          industry: typeof d.service === 'object' ? d.service.nom || '' : '',
+          projectType: typeof d.service === 'object' ? d.service.nom || '' : '',
+          budget: '',
+          deadline: '',
+          requirements: d.besoin,
+          status: mapStatut(d.statut),
+          createdAt: d.createdAt,
+        }));
+        setQuoteRequests(mapped);
+      }
+    } catch { /* fallback */ }
+
+    try {
+      const devisList = await apiGetDevis();
+      if (devisList && devisList.length > 0) {
+        const mapped: Quote[] = devisList.map((d: any) => ({
+          id: d._id,
+          quoteRequestId: typeof d.demande === 'object' ? d.demande._id : d.demande,
+          clientName: '',
+          projectName: `Devis ${d._id.slice(-6)}`,
+          amount: d.montant,
+          terms: '',
+          expiryDate: '',
+          status: mapDevisStatut(d.statut),
+          createdAt: d.createdAt,
+        }));
+        setQuotes(mapped);
+      }
+    } catch { /* fallback */ }
+
+    // Try clientDb for all data (fills gaps the API doesn't cover)
     try {
       const rLeads = clientDb.getLeads();
       const rApts = clientDb.getAppointments();
@@ -102,8 +150,8 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
 
       setLeads(rLeads);
       setAppointments(rApts);
-      setQuoteRequests(rReqs);
-      setQuotes(rQuotes);
+      if (rReqs.length > 0) setQuoteRequests(rReqs);
+      if (rQuotes.length > 0) setQuotes(rQuotes);
       setLogs(rLogs);
 
       const totalLeads = rLeads.length;
@@ -173,6 +221,26 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
       console.error("Admin fetch failed:", e);
     }
   };
+
+  function mapStatut(s: string): QuoteRequest["status"] {
+    const map: Record<string, QuoteRequest["status"]> = {
+      en_attente: "new",
+      en_cours: "in_review",
+      devis_envoye: "quoted",
+      accepte: "accepted",
+      refuse: "rejected",
+    };
+    return map[s] || "new";
+  }
+
+  function mapDevisStatut(s: string): Quote["status"] {
+    const map: Record<string, Quote["status"]> = {
+      envoye: "sent",
+      telecharge: "sent",
+      archive: "rejected",
+    };
+    return map[s] || "sent";
+  }
 
   const handleUpdateLead = (leadId: string, updates: Partial<Lead>) => {
     try {

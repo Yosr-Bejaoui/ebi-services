@@ -11,6 +11,14 @@ import AdminView from "./components/AdminView";
 import { User, Conversation } from "./types";
 import { clientDb } from "./clientDb";
 import {
+  apiLogin,
+  apiRegister,
+  apiGetMe,
+  apiGetUsers,
+} from "./api/auth";
+import { post } from "./api/client";
+import { apiGetNotifications } from "./api/notifications";
+import {
   ShieldAlert,
   Bell,
   Eye,
@@ -28,6 +36,7 @@ import {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>("home");
+  const [pendingBooking, setPendingBooking] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -49,6 +58,21 @@ export default function App() {
 
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotStatus, setForgotStatus] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [resetToken, setResetToken] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetConfirm, setResetConfirm] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const resetToken = params.get("reset_token");
+    if (resetToken) {
+      setResetToken(resetToken);
+      setActiveTab("reset-password");
+    }
+  }, []);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("ebi_session_token");
@@ -66,6 +90,25 @@ export default function App() {
   }, [token]);
 
   const loadSession = async (sessionToken: string) => {
+      try {
+        const me = await apiGetMe();
+        if (me && me._id) {
+          const mappedUser: User = {
+            id: me._id,
+            email: me.email,
+            name: me.fullname,
+            role: me.role === "admin" ? "admin" : "client",
+            companyId: me.entreprise || "Individual",
+            createdAt: me.createdAt || new Date().toISOString(),
+          };
+          setCurrentUser(mappedUser);
+          setToken(me._id);
+          localStorage.setItem("ebi_session_token", me._id);
+          return;
+        }
+      } catch {
+        // Backend unavailable, fall back to clientDb
+      }
     try {
       const users = clientDb.getUsers();
       const found = users.find((u) => u.id === sessionToken);
@@ -83,6 +126,30 @@ export default function App() {
 
   const fetchNotifications = async () => {
     if (!token || !currentUser) return;
+    try {
+      const apiNotifs = await apiGetNotifications();
+      const mapped = apiNotifs.map((n: any) => ({
+        id: n._id,
+        userId:
+          typeof n.destinataire === "object"
+            ? n.destinataire._id
+            : n.destinataire,
+        title: n.type,
+        message: n.contenu,
+        read: n.lu,
+        createdAt: n.createdAt,
+      }));
+      const userNotifs =
+        currentUser.role === "admin"
+          ? mapped
+          : mapped.filter((n: any) => n.userId === currentUser.id);
+      if (mapped.length > 0) {
+        setNotifications(userNotifs);
+        return;
+      }
+    } catch {
+      // Fall back to clientDb
+    }
     try {
       const allNotifs = clientDb.getNotifications();
 
@@ -102,6 +169,42 @@ export default function App() {
     if (!loginEmail || !loginPassword) return;
 
     try {
+      const data = await apiLogin(loginEmail, loginPassword);
+      if (data && data.access_token) {
+        const mappedUser: User = {
+          id: data._id,
+          email: data.email,
+          name: data.fullname,
+          role: data.role === "admin" ? "admin" : "client",
+          companyId: "EBI Services",
+          createdAt: new Date().toISOString(),
+        };
+        setCurrentUser(mappedUser);
+        setToken(data._id);
+        localStorage.setItem("ebi_session_token", data._id);
+        localStorage.setItem("ebi_api_token", data.access_token);
+
+        clientDb.addActivityLog(
+          data._id,
+          data.fullname,
+          "User logged in successfully (API)",
+        );
+
+        setLoginEmail("");
+        setLoginPassword("");
+
+        if (data.role === "admin") {
+          setActiveTab("admin");
+        } else {
+          setActiveTab("portal");
+        }
+        return;
+      }
+    } catch {
+      // Backend unavailable, fall back to clientDb
+    }
+
+    try {
       const users = clientDb.getUsers();
       const passwords = clientDb.getPasswords();
       const user = users.find(
@@ -116,7 +219,7 @@ export default function App() {
         clientDb.addActivityLog(
           user.id,
           user.name,
-          "User logged in successfully",
+          "User logged in successfully (offline)",
         );
 
         setLoginEmail("");
@@ -139,6 +242,35 @@ export default function App() {
     e.preventDefault();
     setRegisterError("");
     if (!registerEmail || !registerPassword || !registerName) return;
+
+    try {
+      const data = await apiRegister(
+        registerName,
+        registerEmail,
+        "0000000000",
+        registerPassword,
+        registerCompany || undefined,
+      );
+      if (data && data._id) {
+        clientDb.addActivityLog(
+          data._id,
+          data.fullname,
+          "User registered via API",
+        );
+        setRegisterSuccess(true);
+        setRegisterEmail("");
+        setRegisterPassword("");
+        setRegisterName("");
+        setRegisterCompany("");
+        setTimeout(() => {
+          setRegisterSuccess(false);
+          setActiveTab("login");
+        }, 2000);
+        return;
+      }
+    } catch {
+      // Backend unavailable, fall back to clientDb
+    }
 
     try {
       const users = clientDb.getUsers();
@@ -211,14 +343,46 @@ export default function App() {
     }
   };
 
-  const handleForgotSubmit = (e: React.FormEvent) => {
+  const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail) return;
-    setForgotStatus(
-      "A dynamic password recovery link has been compiled and dispatched to your email address!",
-    );
-    setForgotEmail("");
+    setForgotLoading(true);
+    try {
+      await post("/auth/forgot-password", { email: forgotEmail });
+      setForgotStatus(
+        "A dynamic password recovery link has been compiled and dispatched to your email address!",
+      );
+      setForgotEmail("");
+    } catch {
+      setForgotStatus(
+        "Unable to process your request at this time. Please try again later.",
+      );
+    } finally {
+      setForgotLoading(false);
+    }
     setTimeout(() => setForgotStatus(""), 5000);
+  };
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (resetPassword !== resetConfirm) {
+      setResetError("Passwords do not match.");
+      return;
+    }
+    if (resetPassword.length < 6) {
+      setResetError("Password must be at least 6 characters.");
+      return;
+    }
+    setResetError("");
+    try {
+      await post("/auth/reset-password", { token: resetToken, password: resetPassword });
+      setResetSuccess("Password reset successful! You can now log in.");
+      setResetPassword("");
+      setResetConfirm("");
+      setTimeout(() => setActiveTab("login"), 3000);
+    } catch {
+      setResetError("Invalid or expired reset token. Please request a new one.");
+    }
   };
 
   const handleLogout = () => {
@@ -226,6 +390,7 @@ export default function App() {
     setToken(null);
     setNotifications([]);
     localStorage.removeItem("ebi_session_token");
+    localStorage.removeItem("ebi_api_token");
     setActiveTab("home");
   };
 
@@ -265,9 +430,13 @@ export default function App() {
           <ContactView onLeadSubmitSuccess={fetchNotifications} />
         )}
 
-        {}
         {activeTab === "portal" && currentUser && token && (
-          <PortalView currentUser={currentUser} token={token} />
+          <PortalView
+            currentUser={currentUser}
+            token={token}
+            pendingBooking={pendingBooking}
+            onBookingOpened={() => setPendingBooking(false)}
+          />
         )}
 
         {activeTab === "admin" && currentUser?.role === "admin" && token && (
@@ -385,6 +554,89 @@ export default function App() {
                 className="text-blue-900 font-bold hover:underline"
               >
                 Register as Member
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "reset-password" && (
+          <div className="mx-auto max-w-md px-4 py-16 text-left space-y-6">
+            <div className="text-center space-y-2">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-blue-900 text-white shadow-md">
+                <Lock className="h-6 w-6" />
+              </div>
+              <h1 className="font-display text-2xl font-bold text-slate-900">
+                Reset Password
+              </h1>
+              <p className="text-xs text-gray-500">
+                Enter your new password below.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
+              {resetSuccess ? (
+                <div className="rounded-xl bg-green-50 border border-green-200 p-6 text-center space-y-3">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700">
+                    <UserCheck className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-display text-sm font-bold text-green-900">
+                    Password Reset Successful
+                  </h3>
+                  <p className="text-xs text-green-800">{resetSuccess}</p>
+                </div>
+              ) : (
+                <form onSubmit={handleResetSubmit} className="space-y-4">
+                  {resetError && (
+                    <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-xs font-semibold text-red-700 flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{resetError}</span>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
+                      New Password *
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Minimum 6 characters"
+                      value={resetPassword}
+                      onChange={(e) => setResetPassword(e.target.value)}
+                      className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
+                      Confirm New Password *
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Repeat your new password"
+                      value={resetConfirm}
+                      onChange={(e) => setResetConfirm(e.target.value)}
+                      className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full bg-blue-900 hover:bg-blue-950 text-white rounded-lg py-2.5 text-xs font-semibold shadow-md transition cursor-pointer"
+                  >
+                    Reset Password
+                  </button>
+                </form>
+              )}
+            </div>
+
+            <div className="text-center text-xs text-gray-500">
+              <button
+                onClick={() => setActiveTab("login")}
+                className="text-blue-900 font-bold hover:underline"
+              >
+                Back to Login
               </button>
             </div>
           </div>
@@ -602,6 +854,9 @@ export default function App() {
       <AIChatbot
         currentUser={currentUser}
         onLeadSubmitSuccess={fetchNotifications}
+        onOpenForm={() => setActiveTab("contact")}
+        onOpenPortal={() => setActiveTab("portal")}
+        onOpenBooking={() => { setActiveTab("portal"); setPendingBooking(true); }}
       />
 
       {}

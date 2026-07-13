@@ -7,7 +7,7 @@ const devisSchema = new mongoose.Schema(
     montant: { type: Number, required: true },
     statut: {
       type: String,
-      enum: ['envoye', 'telecharge', 'archive'],
+      enum: ['envoye', 'telecharge', 'archive', 'accepte', 'refuse'],
       default: 'envoye',
     },
     date_telechargement: { type: Date }, 

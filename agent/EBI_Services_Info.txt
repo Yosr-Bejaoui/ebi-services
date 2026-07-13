@@ -1,0 +1,293 @@
+====================================================================
+EBI SERVICES – KNOWLEDGE BASE (English / Français)
+All information from the company website, PowerPoint presentation,
+and client portal.
+====================================================================
+
+====================================
+1. COMPANY OVERVIEW / PRÉSENTATION
+====================================
+Name: EBI Services
+Slogan: "Votre Partenaire en Performance et Transformation"
+Founded: Paris, France (8+ years in operation)
+CEO & Founder: Jean-Pierre Laurent
+Industries: Custom Software, IT Recruitment, Back-Office & Call Center Outsourcing
+Status: ISO 27001 Prepared
+
+Core business: EBI Services delivers custom software ecosystems, IT technical
+recruiting pipelines, and scalable back-office tele-services to enterprises
+worldwide. The company provides solutions d'externalisation destinées aux
+entreprises européennes with a focus on relation client, performance
+opérationnelle, and conformité aux standards européens.
+
+Partner / client logos (homepage): Aura Fintech, Cyberdyne Systems,
+Carrefour France, Innovatech Sourcing, Global Tele-Hub.
+
+====================================
+2. KEY STATISTICS / STATISTIQUES CLÉS
+====================================
+- SLA Code Delivery: 98.7% ("Always on schedule")
+- Vetted Engineers: 450+ ("Rigorous tech screening")
+- Global Coverage: 24/7 ("Bilingual operators")
+- Client Revenue Optimized: €15M+ ("Through custom ERPs")
+
+====================================
+3. CORE BENEFITS / AVANTAGES CLÉS
+====================================
+1) Rapid Execution & Integration
+   Agile development team delivers complete custom systems in record time
+   without compromising security.
+
+2) Bank-Grade Technical Audits
+   Every contract, line of code, and administrative tele-support desk
+   undergoes thorough compliance vetting and security audits.
+
+3) Elite Pre-Screened Talent
+   EBI recruitment handles candidate screenings, whiteboard tests, and
+   HR matching dynamically. Skip the hiring noise.
+
+====================================
+4. SERVICE FAMILIES / GAMME DE SERVICES
+====================================
+1) Télé-services (Call Center & Tele-Services)
+2) Business Process Outsourcing (BPO)
+3) Solutions IT & Digitales (Software / IT Solutions)
+4) Sourcing & Intégration de profils (IT Recruitment & HR)
+
+====================================
+5. DETAILED SERVICES / DÉTAIL DES SERVICES
+====================================
+
+--- 5.1 TÉLÉ-SERVICES (CALL CENTER & TELE-SERVICES) ---
+Bilingual: English & French
+Coverage: 24/7 operations, 7 days a week
+
+a) Gestion des appels entrants (Inbound Call Management)
+   Reactif 7j/7 – 24h/24. Services: réponse aux demandes clients,
+   assistance téléphonique, SAV, gestion des réclamations, prise de
+   messages professionnels, support technique.
+
+b) Télévente & prospection B2B / B2C (Outbound Sales)
+   Campagnes de télévente, prospection B2B/B2C, présentation d'offres,
+   qualification de leads, closing des ventes, prise de RDV.
+
+c) Prise de rendez-vous qualifiés (Qualified Appointments)
+   Qualification prospects, prise de RDV, gestion agendas commerciaux,
+   confirmation et relance.
+
+d) Télésecrétariat & gestion d'agendas (Virtual Secretariat)
+   Réception d'appels, gestion d'agendas, prise et transmission de
+   messages, suivi administratif, gestion emails entrants.
+
+e) Enquêtes de satisfaction & fidélisation (Surveys & Retention)
+   Enquêtes satisfaction, analyse retours clients, campagnes de
+   fidélisation, suivi post-vente, reporting.
+
+f) Saisie & Traitement de Données (Data Entry & Processing)
+   Saisie administrative (formulaires, contrats), saisie comptable
+   (devis, factures), mise à jour bases de données, numérisation et
+   archivage, contrôle de conformité. Outils: Excel, CRM, ERP.
+
+g) Création de Trafic & Génération de Leads (Traffic & Lead Gen)
+   Campagnes multicanales: e-mailing, SMS, réseaux sociaux, SEO, SEA.
+   Analyse du trafic et reporting.
+
+--- 5.2 BUSINESS PROCESS OUTSOURCING (BPO) ---
+Externalisation des processus métiers pour améliorer l'efficacité
+opérationnelle, réduire les coûts et gagner en agilité.
+
+Services BPO:
+- Externalisation de la relation client (Call Center & Téléservices)
+- Gestion back-office et tâches administratives
+- Saisie et traitement de données
+- Gestion des commandes et suivi clients
+- Support technique (niveau 1)
+- Assistance opérationnelle sur mesure
+- Conduite de travaux
+
+--- 5.3 SOLUTIONS IT & DIGITALES (SOFTWARE DEVELOPMENT) ---
+Technologies: React 19, TypeScript, Tailwind CSS (frontend)
+             RESTful APIs & Webhooks (backend)
+             PostgreSQL & SQLite (databases)
+Methodology: Agile / Scrum, 3-phase sprints
+
+a) Services Managés (Managed IT Services)
+   Gestion proactive des infrastructures: supervision continue,
+   prévention et résolution proactive des incidents, sécurité et
+   disponibilité garanties, réduction des risques.
+
+b) Services Web & Mobile (Web & Mobile Development)
+   Conception et développement de solutions web et mobiles sur mesure,
+   performantes et évolutives. Applications modernes et sécurisées,
+   expérience utilisateur optimisée.
+
+c) Développement & Intégration ERP (ERP Development)
+   Conception et intégration de progiciels ERP adaptés aux besoins
+   métiers. Custom inventory management, barcode/RFID scanners,
+   logistics routing, automated resource planning.
+
+Sprint phases:
+- Phase 1: Requirements Scoping & Wireframes (3-5 days)
+- Phase 2: Agile Code Sprint & DB Schemas (10-15 days)
+- Phase 3: QA Vetting, Pen Testing & Delivery
+
+Additional services: Legacy Code Maintenance, comprehensive code migration,
+security refactoring, database indexing audits, continuous support with
+custom SLAs.
+
+--- 5.4 SOURCING & INTÉGRATION DE PROFILS (IT RECRUITMENT) ---
+Sectors: IT / Informatique, Healthcare / Santé, High-Tech / Technologies de pointe
+Candidate pool: 450+ experienced developer candidates (active directory)
+
+a) Sourcing (Talent Sourcing)
+   Identify exceptional talents via expertise humaine and outils de recherche
+   avancés. Recruitment channels:
+   - Réseaux professionnels (LinkedIn, GitHub)
+   - CVthèques internationales
+   - Chasse directe (executive search)
+   - Réseau de partenaires
+   Senior roles: frontend React experts, systems architects, technical
+   product managers.
+
+b) Placement des profils (Candidate Placement)
+   Comprehensive assessment: compétences techniques, valeurs, potentiel.
+   Pipeline: présélection, entretiens techniques, coordination candidats-
+   entreprises, négociations contractuelles, suivi d'intégration.
+
+Pre-vetting checks:
+- Algorithms Check (coding challenges)
+- Reference Vetting
+- HR Compliance
+- Architectural whiteboard interviews
+
+Recruitment pipeline steps:
+1. Talent Profiling & Job Board Matching
+2. Pre-vetting: whiteboard & code testing
+3. Candidate presentation with full reports
+
+====================================
+6. WHY CHOOSE EBI / POURQUOI EBI
+====================================
+- Expertise globale combinant savoir-faire humain et technologies avancées
+- Approche flexible et personnalisée pour chaque entreprise
+- Solutions intégrées (software + recruitment + support)
+- Rigueur, professionnalisme et orientation résultats
+- ISO 27001 preparedness for security compliance
+- 3 core synchronized departments under one client portal
+
+Client testimonials:
+- Yannick Le Gall, VP Operations, Carrefour Logistics:
+  "EBI Services completely revolutionized our logistics workflow. The custom
+  ERP they engineered reduced our dispatch latency by 45%."
+- Elena Petrova, Engineering Director, Cyberdyne Systems:
+  "We hired 6 senior React architects via EBI within a fortnight. Their
+  vetting process is incredibly thorough."
+
+====================================
+7. CLIENT PORTAL / PORTAIL CLIENT
+====================================
+Features:
+- Dashboard: total request pipelines, issued quotations, scheduled meetings
+- Request Quote: submit scoping requests with industry (Retail, Fintech,
+  Logistics, Healthcare, SaaS), project category (Web SaaS, ERP, IT
+  Screening, Call Center, Back-office), budget range (€5k-€100k+),
+  deadline (1-6 months or Flexible), requirements description, RFP upload
+- Book Consultation: schedule SLA consultation with meeting objective,
+  date, time slot, timezone (Paris, New York, Singapore, UTC)
+- Manager Chat: direct messaging with EBI department heads
+- Document Vault: secure file upload (PDF, Word, Excel, Images, max 10MB)
+- Notifications: real-time portal alerts
+
+====================================
+8. FAQ (FREQUENTLY ASKED QUESTIONS)
+====================================
+Q1: What is your typical project delivery timeline for custom software?
+A1: Medium-sized web/ERP projects: 6 to 12 weeks from scoping to deployment.
+    Small modules: 3-4 weeks under agile sprint framework.
+
+Q2: How does EBI pre-vet IT candidates?
+A2: Three-tiered process: (1) Technical CV matching, (2) Live whiteboard
+    programming/architectural challenge, (3) In-depth HR communications and
+    reference check. Comprehensive reports accompany candidate CVs.
+
+Q3: What SLAs apply to outsourcing / tele-services?
+A3: Average Speed of Answer (ASA) under 90 seconds. Ticket resolution rate
+    above 97%. Weekly performance metrics compiled and available on portal.
+
+Q4: Can I upgrade/downgrade outsourcing agent packages?
+A4: Yes. Manage active packages, add/remove seats, adjust support coverage
+    hours with 14-day notice via the client portal.
+
+====================================
+9. CONTACT INFORMATION / COORDONNÉES
+====================================
+--- From the PowerPoint presentation ---
+Email: contact@ebiservices.net
+Phone: +33 6 95 63 16 12
+Website: www.ebiservices.net
+
+--- From the website footer ---
+Phone (header): +32 460 24 17 40
+Phone (footer): +216 56 566 533 / +32 460 24 17 40
+Email: servicesdossiers@gmail.com
+Address (my company): 50 rue d'Algérie, 7000 Bizerte
+Hours: Monday to Friday, 8h30-16h
+
+--- From the Contact page ---
+Direct Operations Support: +33 1 74 88 99 00
+Email: contact@ebiservices.com
+Headquarters: 12 Avenue des Champs-Élysées, Paris, France
+GPS: 48.8698° N, 2.3075° E
+Working Hours: 08:30 AM - 06:30 PM (CET), Monday to Friday
+
+Social media: Facebook, Twitter, Instagram, LinkedIn
+
+====================================
+10. ABOUT / À PROPOS
+====================================
+Core values:
+1) Security & Compliance - European frameworks, system containment,
+   complete cybersecurity auditing
+2) Agile Delivery Systems - Rapid iteration, live portal tracking of
+   software sprints, recruiting funnels, support latency
+3) Absolute Professionalism - Bilingual call agents, expert systems
+   engineers, pre-vetted via extensive screening
+
+Vision (CEO & Founder Jean-Pierre Laurent):
+"To remain the absolute gold standard for corporate operations, software
+delegation, and recruitment outsourcing. We aim to combine high-performance
+software systems with premium human assets, creating absolute operational
+resilience for our clientele."
+
+====================================
+11. CALL TO ACTION / APPEL À L'ACTION
+====================================
+"Votre croissance mérite le meilleur partenaire. Avec EBI Services,
+optimisez votre relation client, vos processus, vos données et
+votre digitalisation. Prenez contact avec nos experts et commencez
+votre transformation dès aujourd'hui !"
+
+====================================
+12. PORTAL ADMIN REFERENCE
+====================================
+User roles: client (portal access), admin (full CRM access)
+Client features: overview, quotations, appointments, manager chat,
+  document vault, consultation booking, quote request
+Admin features: leads management, demandes, devis, documents,
+  notifications, activity logs
+
+Customer support SLA targets:
+- Average Speed of Answer (ASA): < 90 seconds
+- Daily ticket resolution rate: > 97%
+- Full supervisor reporting logs: weekly
+
+Tech stack (website frontend):
+- React 19, TypeScript, Tailwind CSS
+- Vite build tool
+- Node.js / Express backend (port 5001)
+- MongoDB (data storage)
+- Python AI agent (Groq LLM llama-3.3-70b-versatile)
+
+====================================
+END OF DOCUMENT
+====================================

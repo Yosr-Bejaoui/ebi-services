@@ -1,0 +1,85 @@
+from groq import Groq
+from config import GROQ_API_KEY
+import json
+
+client = Groq(api_key=GROQ_API_KEY)
+
+DEPARTMENTS_FR = {
+    "Tele-services": "Télé-services",
+    "Business Process Outsourcing (BPO)": "Business Process Outsourcing (BPO)",
+    "Solutions IT & Digitales": "Solutions IT & Digitales",
+    "Sourcing & Integration de profils": "Sourcing & Intégration de profils",
+}
+
+DEPARTMENTS_EN = {
+    "Tele-services": "Tele-services",
+    "Business Process Outsourcing (BPO)": "Business Process Outsourcing (BPO)",
+    "IT & Digital Solutions": "IT & Digital Solutions",
+    "Sourcing & Profile Integration": "Sourcing & Profile Integration",
+}
+
+FR_TO_EN = {
+    "Télé-services": "Tele-services",
+    "Business Process Outsourcing (BPO)": "Business Process Outsourcing (BPO)",
+    "Solutions IT & Digitales": "IT & Digital Solutions",
+    "Sourcing & Intégration de profils": "Sourcing & Profile Integration",
+}
+
+EN_TO_FR = {v: k for k, v in FR_TO_EN.items()}
+
+ALL_FR_NAMES = list(FR_TO_EN.keys())
+ALL_EN_NAMES = list(FR_TO_EN.values())
+
+def classify_intent(user_input, lang="fr"):
+    if lang == "en":
+        dept_list = ", ".join(ALL_EN_NAMES)
+        system_prompt = (
+            "You are an assistant that classifies user intents. "
+            "Classify the user's intent based on the following departments: "
+            f"{dept_list}. "
+            "If the intent does not match any department, answer 'No matching department'. "
+            "Answer ONLY with a JSON object in this exact format, with no other text: "
+            '{"intent": "department name or No matching department", '
+            '"confidence": 0.0, "reason": "reason for classification"}'
+        )
+        user_prompt = f"Classify the intent of the following user message: '{user_input}'."
+    else:
+        dept_list = ", ".join(ALL_FR_NAMES)
+        system_prompt = (
+            "Tu es un assistant qui classifie les intentions des utilisateurs. "
+            "Classifie l'intention de l'utilisateur en fonction des départements suivants : "
+            f"{dept_list}. "
+            "Si l'intention ne correspond à aucun de ces départements, réponds 'Aucun département approprié'. "
+            "Réponds UNIQUEMENT avec un objet JSON au format suivant, sans aucun autre texte : "
+            '{"intent": "nom du département ou Aucun département approprié", '
+            '"confiance": 0.0, "raison": "raison de la classification"}'
+        )
+        user_prompt = f"Classifie l'intention de l'utilisateur suivant : '{user_input}'."
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        temperature=0,
+        response_format={"type": "json_object"}
+    )
+
+    result = json.loads(response.choices[0].message.content)
+
+    if lang == "en":
+        name = result.get("intent", "")
+        if name in EN_TO_FR:
+            result["intent_fr"] = EN_TO_FR[name]
+        else:
+            result["intent_fr"] = name
+    else:
+        name = result.get("intent", "")
+        if name in FR_TO_EN:
+            result["intent_en"] = FR_TO_EN[name]
+        else:
+            result["intent_en"] = name
+
+    return result
+

@@ -1,27 +1,35 @@
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 
-const sendEmail = async ({ to, subject, text }) => {
+const sendEmail = async ({ to, subject, text, html }) => {
     try {
-        const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp.mailtrap.io',
-            port: process.env.EMAIL_PORT || 2525,
-            auth: {
-                user: process.env.EMAIL_USER || 'user',
-                pass: process.env.EMAIL_PASS || 'pass',
+        const data = {
+            sender: {
+                name: process.env.BREVO_SENDER_NAME || 'EBI Services',
+                email: process.env.BREVO_SENDER_EMAIL || 'minyar1820@gmail.com',
             },
-        });
-
-        const mailOptions = {
-            from: process.env.EMAIL_FROM || 'noreply@ebiservice.com',
-            to,
+            to: [{ email: to }],
             subject,
-            text,
         };
-
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`Email sent: ${info.messageId}`);
+        if (html) {
+            data.htmlContent = html;
+        } else {
+            data.textContent = text || subject;
+        }
+        const response = await axios({
+            method: 'POST',
+            url: 'https://api.brevo.com/v3/smtp/email',
+            headers: {
+                'api-key': process.env.BREVO_API_KEY,
+                'Content-Type': 'application/json',
+            },
+            data,
+        });
+        console.log(`Email sent to ${to}: ${response.data.messageId}`);
+        return true;
     } catch (error) {
-        console.error(`Error sending email: ${error.message}`);
+        const detail = error.response?.data?.message || error.message;
+        console.error(`Error sending email to ${to}: ${detail}`);
+        return false;
     }
 };
 

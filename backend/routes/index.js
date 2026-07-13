@@ -4,11 +4,14 @@ const router = express.Router();
 router.use('/auth', require('./authRoutes'));
 router.use('/client', require('./clientRoutes'));
 router.use('/utilisateurs', require('./utilisateurRoutes'));
-router.use('/demandes-devis', require('./demandeDeviRoutes'));
+router.use('/demandes', require('./demandeDeviRoutes'));
 router.use('/devis', require('./deviRoutes'));
 router.use('/documents', require('./documentRoutes'));
 router.use('/messages', require('./messageRoutes'));
 router.use('/notifications', require('./notificationRoutes'));
 router.use('/tokens', require('./tokenRoutes'));
+router.use('/form-responses', require('./formResponseRoutes'));
+router.use('/appointments', require('./appointmentRoutes'));
+router.use('/agent', require('./agentRoutes'));
 
 module.exports = router;

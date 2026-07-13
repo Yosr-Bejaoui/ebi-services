@@ -114,6 +114,12 @@ export default function Footer({ setActiveTab }: FooterProps) {
                   },
                 },
                 {
+                  name: "Contact Form",
+                  action: () => {
+                    setActiveTab("contact");
+                  },
+                },
+                {
                   name: "Privacy Policy",
                   action: () => {
                     setActiveTab("privacy");

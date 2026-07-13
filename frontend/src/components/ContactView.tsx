@@ -1,90 +1,68 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Mail,
   Phone,
   MapPin,
   Clock,
-  Send,
-  ShieldAlert,
   CheckCircle,
+  Loader2,
 } from "lucide-react";
-import { clientDb } from "../clientDb";
-import { Lead } from "../types";
+
+const API_URL = "/api/form-responses/form_response";
 
 interface ContactViewProps {
   onLeadSubmitSuccess?: () => void;
 }
 
 export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
-  const [name, setName] = useState("");
-  const [company, setCompany] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [projectDescription, setProjectDescription] = useState("");
-  const [budget, setBudget] = useState("€10,000 - €25,000");
+  const [done, setDone] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", need: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState("");
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !email || !projectDescription) {
-      setErrorMsg("Please fill in all required fields marked with *");
-      return;
+  function validate(): boolean {
+    const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = "Full name is required";
+    if (!form.email.trim()) {
+      e.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      e.email = "Invalid email";
     }
+    if (!form.phone.trim()) {
+      e.phone = "Phone number is required";
+    } else if (!/^[+\d\s\-()]{6,20}$/.test(form.phone)) {
+      e.phone = "Invalid phone number";
+    }
+    if (!form.need.trim()) {
+      e.need = "Please describe your need";
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
 
-    setIsSubmitting(true);
-    setErrorMsg("");
+  async function handleSubmit() {
+    if (!validate()) return;
+    setLoading(true);
+    setSubmitError("");
     try {
-      const leads = clientDb.getLeads();
-      const newLead: Lead = {
-        id: `lead-${Date.now()}`,
-        name,
-        company: company || "Individual",
-        email,
-        phone,
-        country: "France",
-        projectDescription,
-        budget,
-        deadline: "Flexible (2026)",
-        status: "new",
-        suggestedDepartment: projectDescription
-          .toLowerCase()
-          .includes("recruit")
-          ? "Recruitment"
-          : projectDescription.toLowerCase().includes("call") ||
-              projectDescription.toLowerCase().includes("support")
-            ? "Outsourcing"
-            : "Development",
-        priority: "medium",
-        createdAt: new Date().toISOString(),
-      };
-
-      leads.push(newLead);
-      clientDb.setLeads(leads);
-
-      clientDb.addNotification(
-        "usr-admin",
-        "New Web Lead Registered",
-        `${name} from ${company || "Individual"} submitted a new project proposal for €${budget}.`,
-      );
-
-      setSubmitted(true);
-
-      setName("");
-      setCompany("");
-      setEmail("");
-      setPhone("");
-      setProjectDescription("");
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error || "Error submitting the form");
+      }
+      setDone(true);
       if (onLeadSubmitSuccess) onLeadSubmitSuccess();
-    } catch (err) {
-      console.error(err);
-      setErrorMsg("An error occurred. Please try again.");
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : "Network error");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
-  };
+  }
 
   const contactCards = [
     {
@@ -154,151 +132,103 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
           {}
           <div className="md:col-span-7 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <h2 className="font-display text-lg font-bold text-slate-900 mb-4">
-              Enterprise Contact Form
+              Contact Us
             </h2>
+            <p className="text-xs text-gray-400 mb-6">
+              Please fill in your information below.
+            </p>
 
-            {submitted ? (
+            {done ? (
               <div className="rounded-xl bg-green-50 border border-green-200 p-6 text-center space-y-3">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-700">
                   <CheckCircle className="h-6 w-6" />
                 </div>
                 <h3 className="font-display text-base font-bold text-green-900">
-                  Lead Registration Successful
+                  Form submitted successfully
                 </h3>
                 <p className="text-xs text-green-800 leading-relaxed max-w-sm mx-auto">
-                  Thank you! Your information has been registered in our
-                  database. Our AI classification agent has routed your request
-                  to the appropriate department. One of our regional directors
-                  will follow up within 2 hours.
+                  Thank you <strong>{form.name}</strong>! Your form has been received.
+                  A confirmation email has been sent to <strong>{form.email}</strong>.
                 </p>
                 <button
-                  onClick={() => setSubmitted(false)}
+                  onClick={() => { setDone(false); setForm({ name: "", email: "", phone: "", need: "" }); }}
                   className="mt-2 text-xs font-semibold text-green-700 hover:underline"
                 >
-                  Submit another inquiry
+                  Submit another request
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {errorMsg && (
-                  <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-xs font-semibold text-red-700 flex items-center gap-2">
-                    <ShieldAlert className="h-4 w-4" />
-                    <span>{errorMsg}</span>
+              <div className="space-y-4">
+                {submitError && (
+                  <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-xs font-semibold text-red-700">
+                    {submitError}
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Your Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Marc Dubreuil"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Company / Organization
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Carrefour Logistics"
-                      value={company}
-                      onChange={(e) => setCompany(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="e.g. marc.d@carrefour.fr"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      placeholder="e.g. +33 6 1234 5678"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      SLA Department Choice
-                    </label>
-                    <select className="w-full rounded-lg border border-gray-200 bg-white p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none">
-                      <option>Custom Software Development</option>
-                      <option>IT Technical Recruitment</option>
-                      <option>Tele-Services & Call Center Outsourcing</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Estimate Budget
-                    </label>
-                    <select
-                      value={budget}
-                      onChange={(e) => setBudget(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 bg-white p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
-                    >
-                      <option>€5,000 - €10,000</option>
-                      <option>€10,000 - €25,000</option>
-                      <option>€25,000 - €50,000</option>
-                      <option>€50,000 - €100,000</option>
-                      <option>€100,000+</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
+                    Full name
+                  </label>
+                  <input
+                    className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
+                    placeholder="John Doe"
+                    value={form.name}
+                    onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                  {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                    Project Description & Requirements *
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
+                    placeholder="john@company.com"
+                    value={form.email}
+                    onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                  {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
+                    Phone number
+                  </label>
+                  <input
+                    type="tel"
+                    className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
+                    placeholder="+33 6 12 34 56 78"
+                    value={form.phone}
+                    onChange={e => setForm(prev => ({ ...prev, phone: e.target.value }))}
+                  />
+                  {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
+                    Your need
                   </label>
                   <textarea
-                    required
-                    rows={4}
-                    placeholder="Describe your operational requirement, scope draft, or talent profile requirements..."
-                    value={projectDescription}
-                    onChange={(e) => setProjectDescription(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
+                    rows={3}
+                    className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none resize-none"
+                    placeholder="Describe your project or request..."
+                    value={form.need}
+                    onChange={e => setForm(prev => ({ ...prev, need: e.target.value }))}
                   />
+                  {errors.need && <p className="text-xs text-red-500 mt-1">{errors.need}</p>}
                 </div>
 
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-blue-900 hover:bg-blue-950 text-white rounded-lg py-3 text-xs font-semibold shadow-md transition flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="w-full bg-blue-900 hover:bg-blue-950 text-white rounded-lg py-3 text-xs font-semibold shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  <Send className="h-3.5 w-3.5" />
-                  <span>
-                    {isSubmitting
-                      ? "Registering Lead..."
-                      : "Submit Lead Details"}
-                  </span>
+                  {loading && <Loader2 size={16} className="animate-spin" />}
+                  {loading ? "Sending..." : "Send"}
                 </button>
-              </form>
+              </div>
             )}
           </div>
 

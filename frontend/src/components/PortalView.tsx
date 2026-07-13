@@ -25,13 +25,25 @@ import {
   Appointment,
 } from "../types";
 import { clientDb } from "../clientDb";
+import { post } from "../api/client";
+import {
+  apiGetDemandesByClient,
+  apiGetDevis,
+  apiUpdateDevis,
+  apiCreateDemande,
+} from "../api/quotes";
+import { apiGetDocumentsByClient, apiUploadDocument, apiDeleteDocument } from "../api/documents";
+import { apiGetMessagesByClient, apiCreateMessage } from "../api/messages";
+import { apiGetNotificationsByUser, apiMarkNotificationRead, apiMarkAllNotificationsRead } from "../api/notifications";
 
 interface PortalViewProps {
   currentUser: User;
   token: string;
+  pendingBooking?: boolean;
+  onBookingOpened?: () => void;
 }
 
-export default function PortalView({ currentUser, token }: PortalViewProps) {
+export default function PortalView({ currentUser, token, pendingBooking, onBookingOpened }: PortalViewProps) {
   const [activeSubTab, setActiveSubTab] = useState<
     "dashboard" | "quotes" | "appointments" | "chat" | "documents"
   >("dashboard");
@@ -79,30 +91,131 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
     }
   }, [messages]);
 
+  useEffect(() => {
+    if (pendingBooking) {
+      setIsBooking(true);
+      setActiveSubTab("appointments");
+      if (onBookingOpened) onBookingOpened();
+    }
+  }, [pendingBooking, onBookingOpened]);
+
   const fetchPortalData = async () => {
+    let apiUsed = false;
+    // Try API first for demandes
     try {
-      const rReqs = clientDb
-        .getQuoteRequests()
-        .filter((q) => q.userId === currentUser.id);
-      const rQuotes = clientDb
-        .getQuotes()
-        .filter((q) => q.clientName === currentUser.name);
+      const demandes = await apiGetDemandesByClient(currentUser.id);
+      if (demandes && demandes.length > 0) {
+        const mapped: QuoteRequest[] = demandes.map((d: any) => ({
+          id: d._id,
+          userId: typeof d.client === 'object' ? d.client._id : d.client,
+          clientName: currentUser.name,
+          company: currentUser.companyId || '',
+          industry: typeof d.service === 'object' ? d.service.nom || '' : '',
+          projectType: typeof d.service === 'object' ? d.service.nom || '' : '',
+          budget: '',
+          deadline: '',
+          requirements: d.besoin,
+          status: mapStatut(d.statut),
+          createdAt: d.createdAt,
+        }));
+        setQuoteRequests(mapped);
+        apiUsed = true;
+      }
+    } catch { /* fallback */ }
+
+    if (!apiUsed) {
+      try {
+        const rReqs = clientDb
+          .getQuoteRequests()
+          .filter((q) => q.userId === currentUser.id);
+        setQuoteRequests(rReqs);
+      } catch { /* ignore */ }
+    }
+
+    // Quotes via API
+    try {
+      const devisList = await apiGetDevis();
+      if (devisList && devisList.length > 0) {
+        const mapped: Quote[] = devisList.map((d: any) => ({
+          id: d._id,
+          quoteRequestId: typeof d.demande === 'object' ? d.demande._id : d.demande,
+          clientName: currentUser.name,
+          projectName: `Quote ${d._id.slice(-6)}`,
+          amount: d.montant,
+          terms: '',
+          expiryDate: '',
+          status: mapDevisStatut(d.statut),
+          createdAt: d.createdAt,
+        }));
+        mapDevisToQuoteRequests(mapped);
+        setQuotes(mapped);
+      }
+    } catch {
+      try {
+        const rQuotes = clientDb
+          .getQuotes()
+          .filter((q) => q.clientName === currentUser.name);
+        setQuotes(rQuotes);
+      } catch { /* ignore */ }
+    }
+
+    // Appointments (clientDb only)
+    try {
       const rApts = clientDb
         .getAppointments()
         .filter((a) => a.userId === currentUser.id);
-      const rDocs = clientDb
-        .getDocuments()
-        .filter((d) => d.userId === currentUser.id);
-      const rNotifs = clientDb
-        .getNotifications()
-        .filter((n) => n.userId === currentUser.id);
-
-      setQuoteRequests(rReqs);
-      setQuotes(rQuotes);
       setAppointments(rApts);
-      setDocuments(rDocs);
-      setNotifications(rNotifs);
+    } catch { /* ignore */ }
 
+    // Documents via API
+    try {
+      const docs = await apiGetDocumentsByClient(currentUser.id);
+      if (docs && docs.length > 0) {
+        const mapped: ClientDocument[] = docs.map((d: any) => ({
+          id: d._id,
+          userId: currentUser.id,
+          name: d.nom_fichier,
+          type: d.type_mime || 'application/octet-stream',
+          size: d.taille ? `${(d.taille / 1024).toFixed(0)} KB` : 'Unknown',
+          url: d.lien || '#',
+          createdAt: d.createdAt,
+        }));
+        setDocuments(mapped);
+      }
+    } catch {
+      try {
+        const rDocs = clientDb
+          .getDocuments()
+          .filter((d) => d.userId === currentUser.id);
+        setDocuments(rDocs);
+      } catch { /* ignore */ }
+    }
+
+    // Notifications via API
+    try {
+      const notifs = await apiGetNotificationsByUser(currentUser.id);
+      if (notifs && notifs.length > 0) {
+        const mapped = notifs.map((n: any) => ({
+          id: n._id,
+          userId: currentUser.id,
+          title: n.type,
+          message: n.contenu,
+          read: n.lu,
+          createdAt: n.createdAt,
+        }));
+        setNotifications(mapped);
+      }
+    } catch {
+      try {
+        const rNotifs = clientDb
+          .getNotifications()
+          .filter((n) => n.userId === currentUser.id);
+        setNotifications(rNotifs);
+      } catch { /* ignore */ }
+    }
+
+    // Conversations & Messages (clientDb only)
+    try {
       const convs = clientDb
         .getConversations()
         .filter((c) => c.userId === currentUser.id);
@@ -114,60 +227,113 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
           .filter((m) => m.conversationId === activeConv.id);
         setMessages(rMsgs);
       }
-    } catch (e) {
-      console.error("Portal fetch failed:", e);
-    }
+    } catch { /* ignore */ }
   };
 
-  const handleQuoteRequestSubmit = (e: React.FormEvent) => {
+  function mapStatut(s: string): QuoteRequest["status"] {
+    const map: Record<string, QuoteRequest["status"]> = {
+      en_attente: "new",
+      en_cours: "in_review",
+      devis_envoye: "quoted",
+      accepte: "accepted",
+      refuse: "rejected",
+    };
+    return map[s] || "new";
+  }
+
+  function mapDevisStatut(s: string): Quote["status"] {
+    const map: Record<string, Quote["status"]> = {
+      envoye: "sent",
+      telecharge: "sent",
+      archive: "rejected",
+    };
+    return map[s] || "sent";
+  }
+
+  function mapDevisToQuoteRequests(devisList: Quote[]) {
+    const reqs = clientDb.getQuoteRequests();
+    let changed = false;
+    devisList.forEach((d) => {
+      const req = reqs.find((r) => r.id === d.quoteRequestId);
+      if (req && req.status === "in_review") {
+        req.status = "quoted";
+        changed = true;
+      }
+    });
+    if (changed) clientDb.setQuoteRequests(reqs);
+  }
+
+  const handleQuoteRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!quoteType || !quoteRequirements) return;
 
+    let apiCreated = false;
     try {
-      const reqs = clientDb.getQuoteRequests();
-      const newReq: QuoteRequest = {
-        id: `qr-${Math.random().toString(36).substring(2, 11)}`,
-        userId: currentUser.id,
-        clientName: currentUser.name,
-        company: currentUser.companyId || "Individual",
-        industry: quoteIndustry,
-        projectType: quoteType,
-        budget: quoteBudget,
-        deadline: quoteDeadline,
-        requirements: quoteRequirements,
-        attachmentName: uploadedFile?.name || "",
-        attachmentUrl: uploadedFile ? "#" : undefined,
-        status: "new",
-        createdAt: new Date().toISOString(),
-      };
-      reqs.push(newReq);
-      clientDb.setQuoteRequests(reqs);
-
-      clientDb.addNotification(
-        "usr-admin",
-        "New Scoping Profile Registered",
-        `${currentUser.name} has submitted a new requirements specification: ${quoteType}.`,
-      );
-      clientDb.addActivityLog(
-        currentUser.id,
-        currentUser.name,
-        `Created scoping request: ${quoteType}`,
-      );
-
-      setIsRequestingQuote(false);
-      setQuoteRequirements("");
-      setUploadedFile(null);
-      fetchPortalData();
-    } catch (err) {
-      console.error(err);
+      const result = await apiCreateDemande({
+        client: currentUser.id,
+        service: "000000000000000000000000", // placeholder, backend requires ObjectId
+        besoin: `${quoteType}: ${quoteRequirements}`,
+      });
+      if (result && result.demande) {
+        clientDb.addActivityLog(
+          currentUser.id,
+          currentUser.name,
+          `Created scoping request via API: ${quoteType}`,
+        );
+        apiCreated = true;
+      }
+    } catch {
+      // fallback to clientDb
     }
+
+    if (!apiCreated) {
+      try {
+        const reqs = clientDb.getQuoteRequests();
+        const newReq: QuoteRequest = {
+          id: `qr-${Math.random().toString(36).substring(2, 11)}`,
+          userId: currentUser.id,
+          clientName: currentUser.name,
+          company: currentUser.companyId || "Individual",
+          industry: quoteIndustry,
+          projectType: quoteType,
+          budget: quoteBudget,
+          deadline: quoteDeadline,
+          requirements: quoteRequirements,
+          attachmentName: uploadedFile?.name || "",
+          attachmentUrl: uploadedFile ? "#" : undefined,
+          status: "new",
+          createdAt: new Date().toISOString(),
+        };
+        reqs.push(newReq);
+        clientDb.setQuoteRequests(reqs);
+
+        clientDb.addNotification(
+          "usr-admin",
+          "New Scoping Profile Registered",
+          `${currentUser.name} has submitted a new requirements specification: ${quoteType}.`,
+        );
+        clientDb.addActivityLog(
+          currentUser.id,
+          currentUser.name,
+          `Created scoping request: ${quoteType}`,
+        );
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    setIsRequestingQuote(false);
+    setQuoteRequirements("");
+    setUploadedFile(null);
+    fetchPortalData();
   };
 
-  const handleAppointmentBooking = (e: React.FormEvent) => {
+  const handleAppointmentBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!aptTitle || !aptDate) return;
 
     try {
+      // Save to localStorage
       const apts = clientDb.getAppointments();
       const newApt: Appointment = {
         id: `apt-${Math.random().toString(36).substring(2, 11)}`,
@@ -195,6 +361,21 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
         `Requested consultation: "${aptTitle}"`,
       );
 
+      // Save to backend API (sends confirmation email)
+      try {
+        await post("/appointments", {
+          userId: currentUser.id,
+          clientName: currentUser.name,
+          clientEmail: currentUser.email,
+          title: aptTitle,
+          date: aptDate,
+          timeSlot: aptSlot,
+          timezone: aptTimezone,
+        });
+      } catch {
+        // Backend unavailable — email not sent, but local booking works
+      }
+
       setIsBooking(false);
       setAptTitle("");
       setAptDate("");
@@ -204,10 +385,17 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
     }
   };
 
-  const handleQuoteAction = (
+  const handleQuoteAction = async (
     quoteId: string,
     status: "accepted" | "rejected",
   ) => {
+    const backendStatus = status === "accepted" ? "accepte" : "refuse";
+    try {
+      await apiUpdateDevis(quoteId, { statut: backendStatus } as any);
+    } catch {
+      // fallback to clientDb
+    }
+
     try {
       const quotesList = clientDb.getQuotes();
       const quote = quotesList.find((q) => q.id === quoteId);
@@ -241,9 +429,19 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
     }
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     if (!file) return;
-    setUploadProgressMsg("Compressing and hashing...");
+    setUploadProgressMsg("Uploading...");
+
+    try {
+      await apiUploadDocument("", file); // demandeId optional
+      setUploadProgressMsg("Upload Completed!");
+      setTimeout(() => setUploadProgressMsg(""), 2000);
+      fetchPortalData();
+      return;
+    } catch {
+      // fallback to clientDb
+    }
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -327,8 +525,19 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
     }
   };
 
-  const handleSendChatMessage = () => {
+  const handleSendChatMessage = async () => {
     if (!chatMessage.trim() || !chatId) return;
+
+    try {
+      await apiCreateMessage({
+        client: currentUser.id,
+        expediteur: currentUser.id,
+        contenu: chatMessage,
+        client_email: currentUser.email,
+      });
+    } catch {
+      // fallback to clientDb
+    }
 
     try {
       const msgs = clientDb.getMessages();
@@ -365,7 +574,12 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
     }
   };
 
-  const handleDeleteDocument = (id: string) => {
+  const handleDeleteDocument = async (id: string) => {
+    try {
+      await apiDeleteDocument(id);
+    } catch {
+      // fallback to clientDb
+    }
     try {
       const docsList = clientDb.getDocuments();
       const filtered = docsList.filter((d) => d.id !== id);
@@ -516,7 +730,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-[10px] font-bold text-gray-400">
-                            REFERENCE: Q-{q.id.split("-")[1].toUpperCase()}
+                            REFERENCE: Q-{q.id.slice(-6).toUpperCase()}
                           </span>
                           <span className="block text-xs font-bold text-slate-900">
                             {q.projectName}
