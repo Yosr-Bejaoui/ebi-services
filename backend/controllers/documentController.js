@@ -61,7 +61,7 @@ const update = async (req, res) => {
         const doc = await Document.findByIdAndUpdate(
             req.params.id,
             { $set: req.body },
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         );
         if (!doc) return res.status(404).json({ message: 'Document not found' });
         res.status(200).json({ message: 'Document updated', doc });

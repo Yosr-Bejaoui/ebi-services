@@ -33,6 +33,13 @@ const generateTokens = async (userId) => {
 // @access  Public
 const register = async (req, res) => {
     try {
+        if (!global.__dbConnected) {
+            return res.status(503).json({
+                message: 'Registration unavailable because the database is currently unreachable.',
+                error: 'DB_UNAVAILABLE'
+            });
+        }
+
         const { fullname, email, telephone, password, entreprise } = req.body;
 
         if (!fullname || !email || !telephone || !password) {
@@ -78,6 +85,13 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
+
+        if (!global.__dbConnected) {
+            return res.status(503).json({
+                message: 'Authentication unavailable because the database is currently unreachable.',
+                error: 'DB_UNAVAILABLE'
+            });
+        }
 
         // Check for user email
         const user = await User.findOne({ email });

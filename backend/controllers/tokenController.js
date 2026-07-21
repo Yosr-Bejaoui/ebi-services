@@ -43,7 +43,7 @@ const revoke = async (req, res) => {
         const token = await Token.findByIdAndUpdate(
             req.params.id,
             { $set: { actif: false } },
-            { new: true }
+            { returnDocument: 'after' }
         );
         if (!token) return res.status(404).json({ message: 'Token not found' });
         res.status(200).json({ message: 'Token revoked', token });
