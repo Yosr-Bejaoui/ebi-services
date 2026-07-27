@@ -43,7 +43,7 @@ const markAsLu = async (req, res) => {
         const notification = await Notification.findByIdAndUpdate(
             req.params.id,
             { $set: { lu: true } },
-            { new: true }
+            { returnDocument: 'after' }
         );
         if (!notification) return res.status(404).json({ message: 'Notification not found' });
         res.status(200).json({ message: 'Notification marked as read', notification });

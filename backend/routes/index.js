@@ -1,6 +1,13 @@
 const express = require('express');
 const router = express.Router();
 
+router.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        database: global.__dbConnected ? 'connected' : 'degraded',
+    });
+});
+
 router.use('/auth', require('./authRoutes'));
 router.use('/client', require('./clientRoutes'));
 router.use('/utilisateurs', require('./utilisateurRoutes'));

@@ -47,7 +47,7 @@ const update = async (req, res) => {
         const devis = await Devis.findByIdAndUpdate(
             req.params.id,
             { $set: req.body },
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         );
         if (!devis) return res.status(404).json({ message: 'Devis not found' });
         res.status(200).json({ message: 'Devis updated', devis });
@@ -83,7 +83,7 @@ const uploadQuotePDF = async (req, res) => {
         const updatedDemande = await DemandeDevis.findByIdAndUpdate(
             demande,
             { statut: 'devis_envoye' },
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         await sendEmail({

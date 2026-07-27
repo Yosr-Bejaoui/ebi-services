@@ -34,18 +34,38 @@ const getByClient = async (req, res) => {
 };
 
 const sendEmail = require('../utils/sendEmail');
+const Notification = require('../models/notification');
+const User = require('../models/utilisateur');
 
 const create = async (req, res) => {
     try {
         const { client, expediteur, contenu, client_email } = req.body;
         const message = await Message.create({ client, expediteur, contenu });
         
-        if (expediteur !== client) {
+        if (expediteur.toString() !== client.toString()) {
             await sendEmail({
                 to: client_email || 'client@ebiservice.com',
                 subject: 'Nouveau message concernant votre devis',
                 text: `Vous avez un nouveau message : ${contenu}`
             });
+            // Create notification for client
+            await Notification.create({
+                destinataire: client,
+                type: 'nouveau_message',
+                reference_id: message._id,
+                contenu: `Vous avez un nouveau message de l'administration : "${contenu.substring(0, 40)}..."`
+            }).catch(e => console.error("Client notification failed:", e.message));
+        } else {
+            // Client sent to admin
+            const admins = await User.find({ role: 'admin' });
+            for (const admin of admins) {
+                await Notification.create({
+                    destinataire: admin._id,
+                    type: 'nouveau_message',
+                    reference_id: message._id,
+                    contenu: `Nouveau message d'un client: "${contenu.substring(0, 40)}..."`
+                }).catch(e => console.error("Admin notification failed:", e.message));
+            }
         }
 
         res.status(201).json({ message: 'Message created', message: message });
@@ -59,7 +79,7 @@ const markAsLu = async (req, res) => {
         const message = await Message.findByIdAndUpdate(
             req.params.id,
             { $set: { lu: true } },
-            { new: true }
+            { returnDocument: 'after' }
         );
         if (!message) return res.status(404).json({ message: 'Message not found' });
         res.status(200).json({ message: 'Message marked as read', message });

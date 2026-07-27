@@ -7,5 +7,14 @@ coverage/
 uploads/
 __pycache__/
 *.pyc
+.env
 .env*
 !.env.example
+uploads/
+test_apis.js
+dist/
+build/
+coverage/
+backend/.env
+*.log
+.DS_Store
