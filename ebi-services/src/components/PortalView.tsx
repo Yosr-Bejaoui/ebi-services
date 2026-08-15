@@ -52,10 +52,10 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
   const [aptTimezone, setAptTimezone] = useState("Europe/Paris");
 
   const [isRequestingQuote, setIsRequestingQuote] = useState(false);
-  const [quoteIndustry, setQuoteIndustry] = useState("Retail & E-commerce");
-  const [quoteType, setQuoteType] = useState("Web SaaS Application");
+  const [quoteIndustry, setQuoteIndustry] = useState("Vente au détail et commerce électronique");
+  const [quoteType, setQuoteType] = useState("Application SaaS Web");
   const [quoteBudget, setQuoteBudget] = useState("€10,000 - €25,000");
-  const [quoteDeadline, setQuoteDeadline] = useState("3 Months");
+  const [quoteDeadline, setQuoteDeadline] = useState("3 mois");
   const [quoteRequirements, setQuoteRequirements] = useState("");
   const [uploadedFile, setUploadedFile] = useState<{
     name: string;
@@ -426,10 +426,10 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div className="space-y-1">
           <span className="text-[10px] uppercase font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded">
-            Active Client Portal
+            Portail client actif
           </span>
           <h1 className="font-display text-2xl font-bold text-slate-900">
-            Welcome, {currentUser.name}
+            Bienvenue, {currentUser.name}
           </h1>
           <p className="text-xs text-gray-500">
             Track and manage your EBI Custom software, HR, and outsourcing
@@ -442,14 +442,14 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
             className="rounded-lg bg-blue-900 hover:bg-blue-950 text-white px-3.5 py-2 text-xs font-semibold shadow flex items-center gap-1.5 cursor-pointer"
           >
             <PlusCircle className="h-4 w-4" />
-            <span>Request Quote</span>
+            <span>Demander un devis</span>
           </button>
           <button
             onClick={() => setIsBooking(true)}
             className="rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 bg-white px-3.5 py-2 text-xs font-semibold shadow-sm flex items-center gap-1.5 cursor-pointer"
           >
             <CalendarDays className="h-4 w-4" />
-            <span>Book Consultation</span>
+            <span>Réserver une consultation</span>
           </button>
         </div>
       </div>
@@ -458,11 +458,11 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
       <div className="border-b border-gray-200">
         <nav className="flex space-x-6 text-xs font-bold tracking-wide uppercase">
           {[
-            { id: "dashboard", label: "Overview" },
-            { id: "quotes", label: "Quotations & Requests" },
+            { id: "dashboard", label: "Aperçu" },
+            { id: "quotes", label: "Devis & Demandes" },
             { id: "appointments", label: "Consultations" },
-            { id: "chat", label: "Manager Chat" },
-            { id: "documents", label: "Secure Vault" },
+            { id: "chat", label: "Chat avec le manager" },
+            { id: "documents", label: "Coffre-fort sécurisé" },
           ].map((sub) => (
             <button
               key={sub.id}
@@ -488,29 +488,29 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-1 text-left">
               <span className="text-gray-400 text-[10px] uppercase font-bold">
-                Total Request Pipelines
+                Pipelines de demandes totaux
               </span>
               <span className="block text-2xl font-extrabold text-blue-950">
                 {quoteRequests.length}
               </span>
               <span className="text-[10px] text-gray-500 font-medium">
-                CRM registered requirements
+                Exigences enregistrées dans le CRM
               </span>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-1 text-left">
               <span className="text-gray-400 text-[10px] uppercase font-bold">
-                Issued Quotations
+                Devis émis
               </span>
               <span className="block text-2xl font-extrabold text-blue-950">
                 {quotes.length}
               </span>
               <span className="text-[10px] text-gray-500 font-medium">
-                Ready for review
+                Prêt pour examen
               </span>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-1 text-left">
               <span className="text-gray-400 text-[10px] uppercase font-bold">
-                Scheduled Meetings
+                Réunions planifiées
               </span>
               <span className="block text-2xl font-extrabold text-blue-950">
                 {
@@ -520,7 +520,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                 }
               </span>
               <span className="text-[10px] text-gray-500 font-medium">
-                Consultations logs
+                Journaux de consultations
               </span>
             </div>
           </div>
@@ -530,19 +530,19 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
             <div className="md:col-span-7 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <h3 className="font-display text-sm font-bold text-slate-950">
-                  My Formal Quotations
+                  Mes devis formels
                 </h3>
                 <button
                   onClick={() => setActiveSubTab("quotes")}
                   className="text-xs text-blue-900 hover:underline"
                 >
-                  View all
+                  Voir tout
                 </button>
               </div>
 
               {quotes.length === 0 ? (
                 <div className="text-center py-8 text-gray-400 text-xs">
-                  No quotes generated yet. Submit a project request to begin.
+                  Aucun devis généré pour le moment. Soumettez une demande de projet pour commencer.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -580,7 +580,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                               }
                               className="rounded bg-blue-900 text-white text-[10px] font-bold px-2.5 py-1 hover:bg-blue-950 transition cursor-pointer"
                             >
-                              Accept
+                              Accepter
                             </button>
                             <button
                               onClick={() =>
@@ -588,7 +588,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                               }
                               className="rounded border border-gray-300 text-gray-600 text-[10px] font-bold px-2.5 py-1 hover:bg-gray-50 transition cursor-pointer"
                             >
-                              Reject
+                              Refuser
                             </button>
                           </div>
                         ) : (
@@ -612,12 +612,12 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
             {}
             <div className="md:col-span-5 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
               <h3 className="font-display text-sm font-bold text-slate-950 border-b border-gray-100 pb-3 text-left">
-                Portal Notifications
+                Notifications du portail
               </h3>
 
               {notifications.length === 0 ? (
                 <div className="text-center py-8 text-gray-400 text-xs">
-                  No active logs or notices.
+                  Aucun journal ou avis actif.
                 </div>
               ) : (
                 <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
@@ -649,7 +649,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                             }}
                             className="text-[9px] font-semibold text-blue-900 hover:underline"
                           >
-                            Mark Read
+                            Marquer comme lu
                           </button>
                         )}
                       </div>
@@ -676,12 +676,12 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
           {}
           <div className="md:col-span-7 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
             <h3 className="font-display text-sm font-bold text-slate-950 border-b border-gray-100 pb-3 text-left">
-              My Scoping Requests
+              Mes demandes de cadrage
             </h3>
 
             {quoteRequests.length === 0 ? (
               <div className="text-center py-12 text-gray-400 text-xs">
-                No active scoping requests. Click "Request Quote" above to build
+                No active scoping requests. Click "Demander un devis" above to build
                 a project requirement profile!
               </div>
             ) : (
@@ -714,11 +714,11 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                     </p>
                     <div className="grid grid-cols-2 gap-4 text-[10px] text-gray-400 bg-slate-50 p-2 rounded">
                       <div>
-                        <span className="font-bold">Budget Choice:</span>{" "}
+                        <span className="font-bold">Choix de budget :</span>{" "}
                         {req.budget}
                       </div>
                       <div>
-                        <span className="font-bold">Deadline Choice:</span>{" "}
+                        <span className="font-bold">Choix de délai :</span>{" "}
                         {req.deadline}
                       </div>
                     </div>
@@ -739,7 +739,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
           {}
           <div className="md:col-span-5 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
             <h3 className="font-display text-sm font-bold text-slate-950 border-b border-gray-100 pb-3 text-left">
-              Issued Proposals
+              Propositions émises
             </h3>
 
             {quotes.length === 0 ? (
@@ -757,7 +757,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                          Formal Quote
+                          Devis formel
                         </span>
                         <h4 className="text-xs font-bold text-slate-900">
                           {q.projectName}
@@ -766,7 +766,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                       <a
                         href={`/api/files/download/EBI_Quote_Q-${q.id.split("-")[1]}.txt`}
                         className="p-1.5 bg-white border border-gray-200 rounded text-gray-500 hover:text-blue-900 shadow-sm transition"
-                        title="Download Proposal Document"
+                        title="Télécharger le document de proposition"
                       >
                         <FileDown className="h-4 w-4" />
                       </a>
@@ -774,11 +774,11 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
 
                     <div className="border-t border-dashed border-gray-200 pt-2 text-[11px] space-y-1 text-gray-600">
                       <div>
-                        <span className="font-bold">Proposed Budget:</span> €
+                        <span className="font-bold">Budget proposé :</span> €
                         {q.amount.toLocaleString()}
                       </div>
                       <div>
-                        <span className="font-semibold">Expiry Date:</span>{" "}
+                        <span className="font-semibold">Date d'expiration :</span>{" "}
                         {q.expiryDate}
                       </div>
                       <div className="text-[10px] text-gray-500 leading-relaxed italic mt-2">
@@ -793,18 +793,18 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                             onClick={() => handleQuoteAction(q.id, "accepted")}
                             className="flex-1 bg-blue-900 text-white text-[10px] font-bold py-2 rounded shadow-sm hover:bg-blue-950 transition cursor-pointer"
                           >
-                            Accept & Sign SLA
+                            Accepter & Sign SLA
                           </button>
                           <button
                             onClick={() => handleQuoteAction(q.id, "rejected")}
                             className="flex-1 bg-white border border-gray-300 text-gray-600 text-[10px] font-bold py-2 rounded shadow-sm hover:bg-gray-50 transition cursor-pointer"
                           >
-                            Reject Quote
+                            Refuser Quote
                           </button>
                         </>
                       ) : (
                         <div className="w-full text-center py-1 border rounded text-[10px] uppercase font-bold tracking-wider">
-                          Quote Status:{" "}
+                          Statut du devis :{" "}
                           <span
                             className={
                               q.status === "accepted"
@@ -831,12 +831,12 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
       {activeSubTab === "appointments" && (
         <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
           <h3 className="font-display text-sm font-bold text-slate-950 border-b border-gray-100 pb-3 text-left">
-            Consultation Schedules
+            Horaires de consultation
           </h3>
 
           {appointments.length === 0 ? (
             <div className="text-center py-12 text-gray-400 text-xs">
-              No meetings scheduled. Use "Book Consultation" above to secure a
+              No meetings scheduled. Use "Réserver une consultation" above to secure a
               slot on our calendars!
             </div>
           ) : (
@@ -872,7 +872,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                   {a.adminNotes && (
                     <p className="text-[10px] text-gray-500 leading-relaxed bg-slate-50 p-2 rounded">
                       <span className="font-bold text-slate-900 block">
-                        Manager Notes:
+                        Notes du manager :
                       </span>
                       {a.adminNotes}
                     </p>
@@ -888,14 +888,14 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                           clientDb.addActivityLog(
                             currentUser.id,
                             currentUser.name,
-                            `Cancelled appointment: "${a.title}"`,
+                            `Annulerled appointment: "${a.title}"`,
                           );
                         }
                         fetchPortalData();
                       }}
                       className="text-[10px] text-red-600 font-bold hover:underline"
                     >
-                      Cancel Appointment
+                      Annuler le rendez-vous
                     </button>
                   )}
                 </div>
@@ -912,7 +912,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
         <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4 max-w-2xl mx-auto">
           <div className="border-b border-gray-100 pb-3 text-left">
             <h3 className="font-display text-sm font-bold text-slate-950">
-              Manager Direct Support Line
+              Ligne de support direct du manager
             </h3>
             <span className="text-[10px] text-gray-400">
               Directly converse with EBI Services department heads. Fully
@@ -959,7 +959,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
           <div className="flex items-center space-x-2">
             <input
               type="text"
-              placeholder="Send message to our staff..."
+              placeholder="Envoyer un message à notre personnel..."
               value={chatMessage}
               onChange={(e) => setChatMessage(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSendChatMessage()}
@@ -996,10 +996,10 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
             <div className="flex flex-col items-center space-y-2">
               <UploadCloud className="h-10 w-10 text-gray-400" />
               <span className="font-display text-xs font-bold text-slate-900">
-                Drag and Drop scoping draft / RFP documentation
+                Glissez-déposez le brouillon de cadrage / la documentation RFP
               </span>
               <span className="text-[10px] text-gray-400">
-                PDF, Word, Excel, Images (max 10MB)
+                PDF, Word, Excel, Images (max 10 Mo)
               </span>
 
               <div className="relative">
@@ -1016,7 +1016,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                   }
                   className="mt-2 text-xs font-bold bg-blue-900 hover:bg-blue-950 text-white px-3.5 py-1.5 rounded-lg shadow cursor-pointer"
                 >
-                  Browse Files manually
+                  Parcourir les fichiers manuellement
                 </button>
               </div>
 
@@ -1031,7 +1031,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
           {}
           <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
             <h3 className="font-display text-sm font-bold text-slate-950 border-b border-gray-100 pb-3 text-left">
-              Document Vault logs
+              Journaux du coffre-fort de documents
             </h3>
 
             {documents.length === 0 ? (
@@ -1064,14 +1064,14 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                       <a
                         href={doc.url}
                         className="p-1.5 bg-gray-50 border border-gray-200 hover:text-blue-900 rounded shadow-sm text-gray-500 transition"
-                        title="Download file"
+                        title="Télécharger le fichier"
                       >
                         <FileDown className="h-4 w-4" />
                       </a>
                       <button
                         onClick={() => handleDeleteDocument(doc.id)}
                         className="p-1.5 bg-gray-50 border border-gray-200 hover:text-red-600 rounded shadow-sm text-gray-500 transition"
-                        title="Delete file"
+                        title="Supprimer le fichier"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -1090,7 +1090,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
           <div className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h2 className="font-display text-base font-bold text-slate-900">
-                Request Custom Quote
+                Demander un devis personnalisé
               </h2>
               <button
                 onClick={() => setIsRequestingQuote(false)}
@@ -1104,34 +1104,34 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                    Company Industry
+                    Secteur d'activité de l'entreprise
                   </label>
                   <select
                     value={quoteIndustry}
                     onChange={(e) => setQuoteIndustry(e.target.value)}
                     className="w-full rounded border border-gray-200 bg-white p-2 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
                   >
-                    <option>Retail & E-commerce</option>
-                    <option>Fintech & Banking</option>
-                    <option>Logistics & Transport</option>
-                    <option>Healthcare & Pharma</option>
-                    <option>SaaS & Tech Startup</option>
+                    <option>Vente au détail et commerce électronique</option>
+                    <option>Fintech et banque</option>
+                    <option>Logistique et transport</option>
+                    <option>Santé et pharmacie</option>
+                    <option>SaaS et startup technologique</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                    Project Category choice
+                    Choix de la catégorie de projet
                   </label>
                   <select
                     value={quoteType}
                     onChange={(e) => setQuoteType(e.target.value)}
                     className="w-full rounded border border-gray-200 bg-white p-2 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
                   >
-                    <option>Web SaaS Application</option>
-                    <option>Custom ERP system</option>
-                    <option>IT Screening & Recruitment</option>
-                    <option>Bilingual Call Center Outsource</option>
-                    <option>Back-office Admin Support</option>
+                    <option>Application SaaS Web</option>
+                    <option>Système ERP personnalisé</option>
+                    <option>Sélection et recrutement informatique</option>
+                    <option>Externalisation de centre d'appels bilingue</option>
+                    <option>Support administratif back-office</option>
                   </select>
                 </div>
               </div>
@@ -1139,7 +1139,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                    Budget Allocation
+                    Allocation de budget
                   </label>
                   <select
                     value={quoteBudget}
@@ -1155,29 +1155,29 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                 </div>
                 <div>
                   <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                    Delivery Deadline
+                    Délai de livraison
                   </label>
                   <select
                     value={quoteDeadline}
                     onChange={(e) => setQuoteDeadline(e.target.value)}
                     className="w-full rounded border border-gray-200 bg-white p-2 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
                   >
-                    <option>1 Month (Urgent)</option>
-                    <option>3 Months</option>
-                    <option>6 Months</option>
-                    <option>Flexible timeline</option>
+                    <option>1 mois (Urgent)</option>
+                    <option>3 mois</option>
+                    <option>6 mois</option>
+                    <option>Calendrier flexible</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                  Requirements Spec mark *
+                  Marque de spécification des exigences *
                 </label>
                 <textarea
                   required
                   rows={4}
-                  placeholder="Describe your technical parameters, stack selection, features checklist, or daily operations seats needs..."
+                  placeholder="Décrivez vos paramètres techniques, votre sélection de pile, votre liste de fonctionnalités ou vos besoins en matière de sièges pour les opérations quotidiennes..."
                   value={quoteRequirements}
                   onChange={(e) => setQuoteRequirements(e.target.value)}
                   className="w-full rounded border border-gray-200 p-2 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -1187,7 +1187,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
               {}
               <div>
                 <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                  Upload Scoping RFP (Optional)
+                  Télécharger la demande de propositions de cadrage (Facultatif)
                 </label>
                 <input
                   type="file"
@@ -1196,7 +1196,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                 />
                 {uploadedFile && (
                   <span className="block mt-1 text-[10px] text-green-700 font-semibold">
-                    ✓ Attached: {uploadedFile.name}
+                    ✓ Ci-joint : {uploadedFile.name}
                   </span>
                 )}
               </div>
@@ -1206,14 +1206,14 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                   type="submit"
                   className="flex-1 bg-blue-900 hover:bg-blue-950 text-white rounded-lg py-2.5 text-xs font-semibold shadow transition cursor-pointer"
                 >
-                  Submit Quote Request
+                  Soumettre une demande de devis
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsRequestingQuote(false)}
                   className="border border-gray-300 hover:bg-gray-50 text-gray-600 rounded-lg px-4 py-2.5 text-xs transition cursor-pointer"
                 >
-                  Cancel
+                  Annuler
                 </button>
               </div>
             </form>
@@ -1227,7 +1227,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
           <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h2 className="font-display text-base font-bold text-slate-900">
-                Book SLA Consultation
+                Réserver une consultation SLA
               </h2>
               <button
                 onClick={() => setIsBooking(false)}
@@ -1240,12 +1240,12 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
             <form onSubmit={handleAppointmentBooking} className="space-y-3">
               <div>
                 <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                  Meeting Objective *
+                  Objectif de la réunion *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Kickoff ERP integration & pricing review"
+                  placeholder="ex. Lancement de l'intégration ERP et examen de la tarification"
                   value={aptTitle}
                   onChange={(e) => setAptTitle(e.target.value)}
                   className="w-full rounded border border-gray-200 p-2 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -1254,7 +1254,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
 
               <div>
                 <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                  Schedule Date *
+                  Date prévue *
                 </label>
                 <input
                   type="date"
@@ -1268,7 +1268,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
 
               <div>
                 <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                  Time Slot selection
+                  Sélection de créneau horaire
                 </label>
                 <select
                   value={aptSlot}
@@ -1286,7 +1286,7 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
 
               <div>
                 <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                  Timezone support
+                  Prise en charge du fuseau horaire
                 </label>
                 <select
                   value={aptTimezone}
@@ -1305,14 +1305,14 @@ export default function PortalView({ currentUser, token }: PortalViewProps) {
                   type="submit"
                   className="flex-1 bg-blue-900 hover:bg-blue-950 text-white rounded-lg py-2.5 text-xs font-semibold shadow transition cursor-pointer"
                 >
-                  Book Slot on Calendar
+                  Réserver un créneau sur le calendrier
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsBooking(false)}
                   className="border border-gray-300 hover:bg-gray-50 text-gray-600 rounded-lg px-4 py-2.5 text-xs transition cursor-pointer"
                 >
-                  Cancel
+                  Annuler
                 </button>
               </div>
             </form>

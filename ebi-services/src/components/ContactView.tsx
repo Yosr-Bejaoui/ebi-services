@@ -89,47 +89,40 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
   const contactCards = [
     {
       icon: <Phone className="h-5 w-5 text-blue-900" />,
-      title: "Direct Operations Support",
-      detail: "+33 1 74 88 99 00",
-      desc: "Call our general managers for immediate technical consultations.",
+      title: "Tunisie",
+      detail: "+216 56 566 533",
+      desc: "Appelez notre équipe en Tunisie pour des consultations.",
+      link: "tel:+21656566533"
+    },
+    {
+      icon: <Phone className="h-5 w-5 text-blue-900" />,
+      title: "Belgique",
+      detail: "+32 460 24 17 40",
+      desc: "Appelez notre bureau en Belgique pour une assistance.",
+      link: "tel:+32460241740"
     },
     {
       icon: <Mail className="h-5 w-5 text-blue-900" />,
-      title: "Electronic Mail desk",
-      detail: "contact@ebiservices.com",
-      desc: "Submit detailed RFPs, requirements docs, or agency requests directly.",
-    },
-    {
-      icon: <MapPin className="h-5 w-5 text-blue-900" />,
-      title: "Global Headquarters",
-      detail: "12 Avenue des Champs-Élysées, Paris",
-      desc: "Conveniently located in central Paris.",
-    },
-    {
-      icon: <Clock className="h-5 w-5 text-blue-900" />,
-      title: "Working Hours",
-      detail: "08:30 AM - 06:30 PM (CET)",
-      desc: "Our operations desk runs Monday through Friday.",
-    },
+      title: "Email",
+      detail: "servicesdossiers@gmail.com",
+      desc: "Soumettez directement des demandes détaillées.",
+      link: "mailto:servicesdossiers@gmail.com"
+    }
   ];
 
   const faqs = [
     {
-      q: "What is your typical project delivery timeline for custom software?",
-      a: "For medium-sized web/ERP software projects, delivery typically takes 6 to 12 weeks from complete scoping to deployment. Small modules can be delivered within 3-4 weeks under our agile sprint framework.",
+      q: "Comment EBI Services peut-elle améliorer nos performances digitales ?",
+      a: "Nous proposons des solutions personnalisées adaptées à vos besoins pour optimiser vos infrastructures IT et garantir la sécurité de vos données.",
     },
     {
-      q: "How does EBI Services pre-vet IT candidates in your recruitment division?",
-      a: "Every candidate undergoes a mandatory 3-tiered vetting process: (1) Technical CV matching, (2) Live whiteboard programming/architectural challenge, and (3) In-depth HR communications and reference check. We deliver comprehensive reports alongside candidate CVs.",
+      q: "Dans quels pays opérez-vous ?",
+      a: "Avec plus de 8 ans d'expérience, nous accompagnons nos partenaires à travers plus de 5 pays.",
     },
     {
-      q: "What SLAs apply to the outsourcing / tele-services team?",
-      a: "Our customer support team guarantees an Average Speed of Answer (ASA) under 90 seconds and maintaining ticket resolution scores above 97%. Supervisors compile weekly performance metrics, available on the client portal.",
-    },
-    {
-      q: "Can I upgrade or downgrade my outsourcing agents package?",
-      a: "Yes! EBI is highly agile. Client portal accounts allow managing active packages, adding or removing seats, or adjusting support coverage hours with a 14-day notice.",
-    },
+      q: "Proposez-vous des solutions sur mesure ?",
+      a: "Oui, notre priorité est de concevoir des solutions technologiques hautement personnalisées pour répondre spécifiquement aux enjeux de nos partenaires.",
+    }
   ];
 
   return (
@@ -137,14 +130,13 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
       {}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center max-w-2xl mx-auto space-y-3 pt-8">
         <span className="text-xs font-bold uppercase tracking-widest text-blue-600">
-          Get In Touch
+          Contactez-nous
         </span>
         <h1 className="font-display text-3xl font-extrabold text-slate-900 sm:text-5xl">
-          Coordinate With Our Directors
+          Coordonnez-vous avec nos directeurs
         </h1>
         <p className="text-xs text-gray-400">
-          Have an enterprise project or operational requirement? Submit details
-          below to register an active lead or visit our Paris offices.
+          Vous avez un projet d'entreprise ou une exigence opérationnelle ? Soumettez les détails ci-dessous pour enregistrer une demande ou visitez nos bureaux de Paris.
         </p>
       </section>
 
@@ -154,7 +146,7 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
           {}
           <div className="md:col-span-7 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <h2 className="font-display text-lg font-bold text-slate-900 mb-4">
-              Enterprise Contact Form
+              Formulaire de contact entreprise
             </h2>
 
             {submitted ? (
@@ -163,19 +155,16 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
                   <CheckCircle className="h-6 w-6" />
                 </div>
                 <h3 className="font-display text-base font-bold text-green-900">
-                  Lead Registration Successful
+                  Enregistrement de la demande réussi
                 </h3>
                 <p className="text-xs text-green-800 leading-relaxed max-w-sm mx-auto">
-                  Thank you! Your information has been registered in our
-                  database. Our AI classification agent has routed your request
-                  to the appropriate department. One of our regional directors
-                  will follow up within 2 hours.
+                  Merci ! Vos informations ont été enregistrées dans notre base de données. Notre agent de classification IA a acheminé votre demande vers le service approprié. L'un de nos directeurs régionaux vous contactera dans les 2 heures.
                 </p>
                 <button
                   onClick={() => setSubmitted(false)}
                   className="mt-2 text-xs font-semibold text-green-700 hover:underline"
                 >
-                  Submit another inquiry
+                  Soumettre une autre demande
                 </button>
               </div>
             ) : (
@@ -190,12 +179,12 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Your Full Name *
+                      Votre nom complet *
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Marc Dubreuil"
+                      placeholder="ex. Marc Dubreuil"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -203,11 +192,11 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Company / Organization
+                      Entreprise / Organisation
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Carrefour Logistics"
+                      placeholder="ex. Carrefour Logistics"
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
                       className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -218,12 +207,12 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Email Address *
+                      Adresse e-mail *
                     </label>
                     <input
                       type="email"
                       required
-                      placeholder="e.g. marc.d@carrefour.fr"
+                      placeholder="ex. marc.d@carrefour.fr"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -231,11 +220,11 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Phone Number
+                      Numéro de téléphone
                     </label>
                     <input
                       type="tel"
-                      placeholder="e.g. +33 6 1234 5678"
+                      placeholder="ex. +33 6 1234 5678"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -246,17 +235,17 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      SLA Department Choice
+                      Choix du département SLA
                     </label>
                     <select className="w-full rounded-lg border border-gray-200 bg-white p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none">
-                      <option>Custom Software Development</option>
-                      <option>IT Technical Recruitment</option>
-                      <option>Tele-Services & Call Center Outsourcing</option>
+                      <option>Développement de logiciels sur mesure</option>
+                      <option>Recrutement technique informatique</option>
+                      <option>Télé-services et externalisation de centre d'appels</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Estimate Budget
+                      Estimation du budget
                     </label>
                     <select
                       value={budget}
@@ -274,12 +263,12 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                    Project Description & Requirements *
+                    Description et exigences du projet *
                   </label>
                   <textarea
                     required
                     rows={4}
-                    placeholder="Describe your operational requirement, scope draft, or talent profile requirements..."
+                    placeholder="Décrivez votre exigence opérationnelle, le projet de portée ou les exigences de profil de talent..."
                     value={projectDescription}
                     onChange={(e) => setProjectDescription(e.target.value)}
                     className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -294,8 +283,8 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
                   <Send className="h-3.5 w-3.5" />
                   <span>
                     {isSubmitting
-                      ? "Registering Lead..."
-                      : "Submit Lead Details"}
+                      ? "Enregistrement de la demande..."
+                      : "Soumettre les détails de la demande"}
                   </span>
                 </button>
               </form>
@@ -318,9 +307,9 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
                     <span className="block font-display text-xs font-bold text-slate-900">
                       {card.title}
                     </span>
-                    <span className="block mt-0.5 text-xs font-bold text-blue-900">
+                    <a href={card.link} className="block mt-0.5 text-xs font-bold text-blue-900 hover:underline">
                       {card.detail}
-                    </span>
+                    </a>
                     <span className="block mt-0.5 text-[11px] text-gray-400 leading-snug">
                       {card.desc}
                     </span>
@@ -329,38 +318,27 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
               ))}
             </div>
 
-            {}
             <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm space-y-3">
               <span className="block font-display text-xs font-bold text-slate-900">
-                Map Directory Location
+                Nos emplacements
               </span>
 
               <div className="relative rounded-lg h-44 bg-slate-100 border border-gray-200 overflow-hidden flex flex-col justify-between p-4">
-                {}
+                {/* Grid Pattern */}
                 <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-70"></div>
 
-                {}
+                {/* Location Marker */}
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10">
                   <div className="bg-red-500 rounded-full h-3 w-3 shadow animate-ping absolute"></div>
                   <div className="bg-red-600 rounded-full h-3 w-3 border-2 border-white shadow z-20"></div>
-                  <div className="mt-1 bg-blue-950 text-white rounded px-2 py-0.5 text-[9px] font-bold shadow whitespace-nowrap z-20">
-                    Champs-Élysées, Paris
-                  </div>
                 </div>
 
                 <div className="z-10 bg-white/95 backdrop-blur border border-gray-150 rounded p-2 text-[10px] w-fit shadow-sm">
                   <span className="block font-semibold">
-                    EBI Services Paris
+                    EBI Services
                   </span>
                   <span className="text-gray-400">
-                    12 Ave des Champs-Élysées
-                  </span>
-                </div>
-
-                <div className="z-10 flex justify-between items-center text-[9px] text-gray-400">
-                  <span>GPS: 48.8698° N, 2.3075° E</span>
-                  <span className="font-semibold text-blue-900 hover:underline cursor-pointer">
-                    Open Navigation
+                    Tunisie & Belgique
                   </span>
                 </div>
               </div>
@@ -373,10 +351,10 @@ export default function ContactView({ onLeadSubmitSuccess }: ContactViewProps) {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center max-w-xl mx-auto space-y-2">
           <span className="text-xs font-bold uppercase tracking-widest text-blue-600">
-            Common Questions
+            Questions fréquentes
           </span>
           <h2 className="font-display text-2.5xl font-bold text-slate-900">
-            Frequently Asked Inquiries
+            Foire aux questions
           </h2>
         </div>
 

@@ -104,7 +104,7 @@ export default function App() {
           id: notif.id || notif._id,
           userId: notif.destinataire,
           title: notif.title || defaultTitle,
-          message: notif.message || notif.contenu || "No details provided",
+          message: notif.message || notif.contenu || "Aucun détail fourni",
           read: notif.read ?? notif.lu ?? false,
           createdAt: notif.createdAt,
         };
@@ -142,7 +142,7 @@ export default function App() {
         setActiveTab("portal");
       }
     } catch (error) {
-      setLoginError(error instanceof Error ? error.message : "Failed to authenticate.");
+      setLoginError(error instanceof Error ? error.message : "Échec de l'authentification.");
     } finally {
       setLoading(false);
     }
@@ -183,7 +183,7 @@ export default function App() {
         setActiveTab("portal");
       }, 2000);
     } catch (error) {
-      setRegisterError(error instanceof Error ? error.message : "Failed to register.");
+      setRegisterError(error instanceof Error ? error.message : "Échec de l'inscription.");
     } finally {
       setLoading(false);
     }
@@ -193,7 +193,7 @@ export default function App() {
     e.preventDefault();
     if (!forgotEmail) return;
     setForgotStatus(
-      "A dynamic password recovery link has been compiled and dispatched to your email address!",
+      "Un lien dynamique de récupération de mot de passe a été généré et envoyé à votre adresse e-mail !",
     );
     setForgotEmail("");
     setTimeout(() => setForgotStatus(""), 5000);
@@ -260,10 +260,10 @@ export default function App() {
                 <Building2 className="h-6 w-6" />
               </div>
               <h1 className="font-display text-2xl font-bold text-slate-900">
-                EBI Services Login
+                Connexion Services EBI
               </h1>
               <p className="text-xs text-gray-500">
-                Enter your credentials to access your secure client portal.
+                Saisissez vos identifiants pour accéder à votre portail client sécurisé.
               </p>
             </div>
 
@@ -278,12 +278,12 @@ export default function App() {
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                    Corporate Email Address
+                    Adresse e-mail professionnelle
                   </label>
                   <input
                     type="email"
                     required
-                    placeholder="e.g. client@acme.com"
+                    placeholder="ex. client@acme.com"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -293,7 +293,7 @@ export default function App() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-[10px] font-bold uppercase text-gray-500">
-                      Secure Password
+                      Mot de passe sécurisé
                     </label>
                   </div>
                   <div className="relative">
@@ -323,20 +323,20 @@ export default function App() {
                   type="submit"
                   className="w-full bg-blue-900 hover:bg-blue-950 text-white rounded-lg py-2.5 text-xs font-semibold shadow-md transition cursor-pointer"
                 >
-                  Sign In Securely
+                  Se connecter en toute sécurité
                 </button>
               </form>
 
               {}
               <div className="pt-4 border-t border-gray-150 space-y-2">
                 <span className="block text-[10px] text-gray-400 font-bold uppercase text-center">
-                  Forgot Password?
+                  Mot de passe oublié ?
                 </span>
                 <form onSubmit={handleForgotSubmit} className="flex gap-2">
                   <input
                     type="email"
                     required
-                    placeholder="Enter email..."
+                    placeholder="Saisissez l'e-mail..."
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     className="flex-1 rounded border border-gray-200 p-1.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -345,7 +345,7 @@ export default function App() {
                     type="submit"
                     className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-1.5 rounded transition cursor-pointer"
                   >
-                    Reset
+                    Réinitialiser
                   </button>
                 </form>
                 {forgotStatus && (
@@ -357,12 +357,12 @@ export default function App() {
             </div>
 
             <div className="text-center text-xs text-gray-500">
-              New to EBI?{" "}
+              Nouveau sur EBI ?{" "}
               <button
                 onClick={() => setActiveTab("register")}
                 className="text-blue-900 font-bold hover:underline"
               >
-                Register as Member
+                S'inscrire en tant que membre
               </button>
             </div>
           </div>
@@ -376,10 +376,10 @@ export default function App() {
                 <Building2 className="h-6 w-6" />
               </div>
               <h1 className="font-display text-2xl font-bold text-slate-900">
-                Become Portal Client
+                Devenir client du portail
               </h1>
               <p className="text-xs text-gray-500">
-                Register in seconds to request instant formal pricing quotes.
+                Inscrivez-vous en quelques secondes pour demander des devis formels instantanés.
               </p>
             </div>
 
@@ -390,10 +390,10 @@ export default function App() {
                     <UserCheck className="h-5 w-5" />
                   </div>
                   <h3 className="font-display text-sm font-bold text-green-900">
-                    Registration Successful
+                    Inscription réussie
                   </h3>
                   <p className="text-xs text-green-800">
-                    Your account has been provisioned. Redirecting to login...
+                    Votre compte a été créé. Redirection vers la connexion...
                   </p>
                 </div>
               ) : (
@@ -407,12 +407,12 @@ export default function App() {
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Your Full Name *
+                      Votre nom complet *
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Marc Dubreuil"
+                      placeholder="ex. Marc Dubreuil"
                       value={registerName}
                       onChange={(e) => setRegisterName(e.target.value)}
                       className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -421,11 +421,11 @@ export default function App() {
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Company / Organization
+                      Entreprise / Organisation
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Carrefour Logistics"
+                      placeholder="ex. Carrefour Logistics"
                       value={registerCompany}
                       onChange={(e) => setRegisterCompany(e.target.value)}
                       className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -434,12 +434,12 @@ export default function App() {
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Corporate Email Address *
+                      Adresse e-mail professionnelle *
                     </label>
                     <input
                       type="email"
                       required
-                      placeholder="e.g. marc.d@carrefour.fr"
+                      placeholder="ex. marc.d@carrefour.fr"
                       value={registerEmail}
                       onChange={(e) => setRegisterEmail(e.target.value)}
                       className="w-full rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -448,7 +448,7 @@ export default function App() {
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1">
-                      Password *
+                      Mot de passe *
                     </label>
                     <input
                       type="password"
@@ -464,19 +464,19 @@ export default function App() {
                     type="submit"
                     className="w-full bg-blue-900 hover:bg-blue-950 text-white rounded-lg py-2.5 text-xs font-semibold shadow-md transition cursor-pointer"
                   >
-                    Complete Provisioning
+                    Terminer l'inscription
                   </button>
                 </form>
               )}
             </div>
 
             <div className="text-center text-xs text-gray-500">
-              Already have an account?{" "}
+              Vous avez déjà un compte ?{" "}
               <button
                 onClick={() => setActiveTab("login")}
                 className="text-blue-900 font-bold hover:underline"
               >
-                Login here
+                Connectez-vous ici
               </button>
             </div>
           </div>
@@ -486,44 +486,33 @@ export default function App() {
         {activeTab === "privacy" && (
           <div className="mx-auto max-w-3xl px-4 py-12 text-left space-y-6">
             <h1 className="font-display text-3xl font-extrabold text-slate-900">
-              Privacy Policy
+              Politique de confidentialité
             </h1>
             <span className="text-xs text-gray-400 block">
-              Last updated: July 9, 2026
+              Dernière mise à jour : 9 juillet 2026
             </span>
 
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm text-xs text-gray-600 space-y-4 leading-relaxed">
               <p>
-                At EBI Services, we prioritize secure data containment. This
-                Privacy Policy details how we compile, encrypt, and secure
-                operational lead details, quotation documents, chat transcripts,
-                and schedules across our SaaS platform.
+                Chez EBI Services, nous donnons la priorité à la sécurité des données. Cette politique de confidentialité détaille comment nous compilons, chiffrons et sécurisons les détails opérationnels des prospects, les devis, les transcriptions de chat et les plannings sur notre plateforme SaaS.
               </p>
 
               <h3 className="font-bold text-slate-900">
-                1. Data Scoping and Storage
+                1. Portée et stockage des données
               </h3>
               <p>
-                Any technical requirements documents or base64 files uploaded
-                inside our Client Portal secure vault are encrypted at rest
-                using industry-grade frameworks. We do not Sell or distribute
-                corporate logs.
+                Tout document technique ou fichier en base64 téléchargé dans notre coffre-fort sécurisé du portail client est chiffré au repos à l'aide de frameworks de qualité industrielle. Nous ne vendons ni ne distribuons les journaux d'entreprise.
               </p>
 
               <h3 className="font-bold text-slate-900">
-                2. Cookies and Sandbox Environments
+                2. Cookies et environnements Sandbox
               </h3>
               <p>
-                Since our application renders inside highly-secured sandboxed
-                browser iframe layouts, we employ non-tracking cookie state
-                markers (storing active sessions purely inside localized
-                client-side browser localStorage buckets) to ensure compliance
-                with General Data Protection Regulation (GDPR) protocols.
+                Étant donné que notre application s'exécute dans des iframes de navigateur en bac à sable hautement sécurisés, nous utilisons des marqueurs d'état de cookies sans suivi (stockant les sessions actives uniquement dans des compartiments localStorage locaux côté client) pour garantir la conformité avec les protocoles du règlement général sur la protection des données (RGPD).
               </p>
 
               <p>
-                For support regarding data purging or compliance audits, contact
-                compliance@ebiservices.com.
+                Pour obtenir de l'aide concernant la purge des données ou les audits de conformité, contactez compliance@ebiservices.com.
               </p>
             </div>
           </div>
@@ -533,40 +522,31 @@ export default function App() {
         {activeTab === "terms" && (
           <div className="mx-auto max-w-3xl px-4 py-12 text-left space-y-6">
             <h1 className="font-display text-3xl font-extrabold text-slate-900">
-              Terms of Service
+              Conditions de service
             </h1>
             <span className="text-xs text-gray-400 block">
-              Last updated: July 9, 2026
+              Dernière mise à jour : 9 juillet 2026
             </span>
 
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm text-xs text-gray-600 space-y-4 leading-relaxed">
               <p>
-                These Terms of Service govern corporate usage of EBI Services
-                and the unified client portal.
+                Ces conditions d'utilisation régissent l'utilisation professionnelle d'EBI Services et du portail client unifié.
               </p>
 
               <h3 className="font-bold text-slate-900">
-                1. Quote Generation and Estimates
+                1. Génération de devis et estimations
               </h3>
               <p>
-                Any pricing quote generated by our pricing models represents an
-                estimate. Final pricing parameters remain subject to technical
-                scoping contracts mutually executed by authorized EBI Services
-                regional directors.
+                Tout devis généré par nos modèles de tarification représente une estimation. Les paramètres de tarification finaux restent soumis à des contrats de cadrage technique mutuellement signés par les directeurs régionaux autorisés d'EBI Services.
               </p>
 
-              <h3 className="font-bold text-slate-900">2. Technical SLAs</h3>
+              <h3 className="font-bold text-slate-900">2. SLA techniques</h3>
               <p>
-                Service Level Agreements (SLAs) regarding software code
-                maintenance, technical recruitment, screening latency, or
-                bilingual tele-support ticket resolution times correspond to
-                standard packages agreed upon inside client portals.
+                Les accords de niveau de service (SLA) concernant la maintenance du code logiciel, le recrutement technique, la latence de sélection ou les temps de résolution des tickets d'assistance téléphonique bilingue correspondent aux forfaits standard convenus dans les portails clients.
               </p>
 
               <p>
-                Unauthorized access of EBI's systems, automated scripting of
-                lead forms, or scraping of our candidate databases constitutes
-                material breach and will terminate access immediately.
+                L'accès non autorisé aux systèmes d'EBI, l'automatisation des formulaires de prospects ou l'extraction de nos bases de données de candidats constitue une violation substantielle et entraînera la résiliation immédiate de l'accès.
               </p>
             </div>
           </div>
@@ -591,11 +571,11 @@ export default function App() {
                 <div className="flex items-center gap-1.5 text-blue-900 font-bold">
                   <Bell className="h-4 w-4" />
                   <span className="font-display text-sm uppercase tracking-wider">
-                    Unread Activity Notifications
+                    Notifications d'activité non lues
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {notifications.some(n => !n.read) && (
+                  {notifications.some(n => !n.read) && currentUser && (
                     <button
                       onClick={async () => {
                         try {
@@ -607,7 +587,7 @@ export default function App() {
                       }}
                       className="text-[10px] font-bold text-blue-900 hover:underline cursor-pointer"
                     >
-                      Mark all as read
+                      Tout marquer comme lu
                     </button>
                   )}
                   <button
@@ -621,7 +601,7 @@ export default function App() {
 
               {notifications.length === 0 ? (
                 <div className="text-center py-12 text-gray-400 text-xs">
-                  No active notices.
+                  Aucune notification active.
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -672,7 +652,7 @@ export default function App() {
                             }}
                             className="text-[9px] font-bold text-blue-900 hover:underline cursor-pointer"
                           >
-                            Mark as Read
+                            Marquer comme lu
                           </button>
                         )}
                       </div>
@@ -692,7 +672,7 @@ export default function App() {
               onClick={() => setShowNotificationsModal(false)}
               className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 rounded py-2 text-xs font-semibold"
             >
-              Close Panel
+              Fermer le panneau
             </button>
           </div>
         </div>

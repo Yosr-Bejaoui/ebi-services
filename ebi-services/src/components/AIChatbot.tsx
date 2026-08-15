@@ -35,7 +35,7 @@ export default function AIChatbot({
     {
       id: "welcome",
       sender: "bot",
-      text: "Hello! I am the EBI Services AI Assistant. I can help explain our custom software development workflows, IT recruitment capabilities, and customer support outsourcing solutions. What can I assist you with today?",
+      text: "Bonjour ! Je suis l'assistant IA d'EBI Services. Je peux vous expliquer nos workflows de développement de logiciels sur mesure, nos capacités de recrutement informatique et nos solutions d'externalisation du support client. Comment puis-je vous aider aujourd'hui ?",
       timestamp: new Date(),
     },
   ]);
@@ -50,7 +50,7 @@ export default function AIChatbot({
   const [leadCountry, setLeadCountry] = useState("France");
   const [leadDesc, setLeadDesc] = useState("");
   const [leadBudget, setLeadBudget] = useState("€10,000 - €25,000");
-  const [leadDeadline, setLeadDeadline] = useState("3 Months");
+  const [leadDélai, setLeadDélai] = useState("3 mois");
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
 
@@ -96,7 +96,7 @@ export default function AIChatbot({
         lower.includes("web")
       ) {
         reply =
-          "EBI Services designs ultra-high-performance custom software, Web Apps, and integrated ERP systems. Our development team handles end-to-end architecture design, API integrations, and robust portal builders. We specialize in React, Node, and scalable cloud structures. Would you like me to open our quote tool to scope a technical project?";
+          "EBI Services conçoit des logiciels sur mesure, des applications Web et des systèmes ERP intégrés ultra-performants. Notre équipe de développement gère la conception de l'architecture de bout en bout, les intégrations d'API et les créateurs de portails robustes. Nous sommes spécialisés dans React, Node et les structures cloud évolutives. Souhaitez-vous que j'ouvre notre outil de devis pour définir un projet technique ?";
       } else if (
         lower.includes("recruit") ||
         lower.includes("talent") ||
@@ -105,7 +105,7 @@ export default function AIChatbot({
         lower.includes("engineer")
       ) {
         reply =
-          "Through our Premium IT Recruitment branch, EBI sources and thoroughly vets elite developers and engineers. We pre-vet candidates technically so you only interview the top 3% of matched talent. We support developer sourcing in Europe, North America, and globally. Let us know if you want to consult with our recruitment directors!";
+          "Par le biais de notre branche de recrutement informatique Premium, EBI recherche et sélectionne rigoureusement des développeurs et ingénieurs d'élite. Nous pré-évaluons techniquement les candidats afin que vous n'interviewiez que les 3 % des meilleurs talents correspondants. Nous prenons en charge la recherche de développeurs en Europe, en Amérique du Nord et dans le monde entier. Faites-nous savoir si vous souhaitez consulter nos directeurs de recrutement !";
       } else if (
         lower.includes("outsource") ||
         lower.includes("call") ||
@@ -114,7 +114,7 @@ export default function AIChatbot({
         lower.includes("customer")
       ) {
         reply =
-          "EBI Tele-Services offers professional 24/7 bilingual customer support, outbound telemarketing, and administrative back-office outsourcing. We maintain secure, high-tech contact center facilities with highly trained specialists. We can fully manage your support tickets or lead gen campaigns. Would you like a price estimate for outsourcing support?";
+          "EBI Tele-Services propose un support client bilingue professionnel 24h/24 et 7j/7, du télémarketing sortant et de l'externalisation de back-office administratif. Nous maintenons des centres de contact sécurisés et de haute technologie avec des spécialistes hautement qualifiés. Nous pouvons gérer entièrement vos tickets de support ou vos campagnes de génération de leads. Souhaitez-vous une estimation de prix pour l'externalisation du support ?";
       } else if (
         lower.includes("quote") ||
         lower.includes("quotation") ||
@@ -124,11 +124,11 @@ export default function AIChatbot({
         lower.includes("budget")
       ) {
         reply =
-          "I would be delighted to guide you! EBI Services offers flexible pricing model strategies depending on the service department. Let's open our dynamic Project Lead Scoper form below so you can enter your exact requirements, budget, and timeline, and we will compile an instant quotation in your portal!";
+          "Je serais ravi de vous guider ! EBI Services propose des stratégies de modèles de tarification flexibles en fonction du service. Ouvrons notre formulaire dynamique de cadrage de projet ci-dessous afin que vous puissiez saisir vos exigences exactes, votre budget et votre calendrier, et nous compilerons un devis instantané dans votre portail !";
         setShowLeadForm(true);
       } else {
         reply =
-          "I appreciate that. EBI Services is an enterprise provider specialized in Custom Software Development, Elite IT Recruitment, and Professional Customer Support & Back-office outsourcing. Let me know which of these areas your query relates to, or feel free to request an instant quote consultation!";
+          "Je vous remercie. EBI Services est un fournisseur d'entreprise spécialisé dans le développement de logiciels sur mesure, le recrutement informatique d'élite et l'externalisation professionnelle du support client et du back-office. Faites-moi savoir à quel domaine se rapporte votre requête, ou n'hésitez pas à demander une consultation pour un devis instantané !";
       }
 
       const botMsg: ChatMessage = {
@@ -176,7 +176,7 @@ export default function AIChatbot({
         {
           id: `lead-ok-${Date.now()}`,
           sender: "bot",
-          text: "💼 [AI Notice]: I've automatically registered your project lead with EBI management! They will reach out to you shortly.",
+          text: "💼 [Avis IA] : J'ai automatiquement enregistré votre demande de projet auprès de la direction d'EBI ! Ils vous contacteront sous peu.",
           timestamp: new Date(),
         },
       ]);
@@ -202,7 +202,7 @@ export default function AIChatbot({
         country: leadCountry,
         projectDescription: leadDesc,
         budget: leadBudget,
-        deadline: leadDeadline,
+        deadline: leadDélai,
         status: "new",
         suggestedDepartment: leadDesc.toLowerCase().includes("recruit")
           ? "Recruitment"
@@ -235,7 +235,7 @@ export default function AIChatbot({
         {
           id: `form-success-${Date.now()}`,
           sender: "bot",
-          text: `Thank you, ${leadName}! Your project lead for "${leadDesc.substring(0, 30)}..." has been received. Our directors have been notified and will verify your requirements.`,
+          text: `Merci, ${leadName}! Votre demande de projet pour "${leadDesc.substring(0, 30)}..." a été reçue. Nos directeurs ont été informés et vérifieront vos exigences.`,
           timestamp: new Date(),
         },
       ]);
@@ -249,20 +249,20 @@ export default function AIChatbot({
 
   const quickActions = [
     {
-      label: "Software Development Workflow",
-      text: "Tell me about your custom Software Development services and ERP solutions.",
+      label: "Workflow de développement de logiciels",
+      text: "Parlez-moi de vos services de développement de logiciels sur mesure et de vos solutions ERP.",
     },
     {
-      label: "IT Sourcing & Recruitment",
-      text: "How does EBI help recruit and pre-vet technical engineering candidates?",
+      label: "Recherche et recrutement informatique",
+      text: "Comment EBI aide-t-elle à recruter et à pré-évaluer des candidats ingénieurs techniques ?",
     },
     {
-      label: "Tele-Services & Support",
-      text: "Can you provide outbound call center or inbound bilingual customer support?",
+      label: "Télé-services et support",
+      text: "Pouvez-vous fournir un centre d'appels sortant ou un support client bilingue entrant ?",
     },
     {
-      label: "Request an Instant Quote",
-      text: "I would like to request a quotation for a custom enterprise project.",
+      label: "Demander un devis instantané",
+      text: "Je souhaite demander un devis pour un projet d'entreprise sur mesure.",
     },
   ];
 
@@ -283,7 +283,7 @@ export default function AIChatbot({
                 </span>
                 <span className="text-[10px] text-blue-200 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                  Active Expert Assistant
+                  Assistant expert actif
                 </span>
               </div>
             </div>
@@ -354,7 +354,7 @@ export default function AIChatbot({
                 <div className="flex items-center space-x-2 text-blue-950">
                   <Briefcase className="h-4 w-4" />
                   <span className="font-display text-xs font-bold uppercase tracking-wider">
-                    Instant Quote Lead Scoper
+                    Cadrage de demande de devis instantané
                   </span>
                 </div>
                 <p className="text-[11px] text-gray-600 leading-snug">
@@ -365,7 +365,7 @@ export default function AIChatbot({
                 <form onSubmit={handleFormSubmit} className="space-y-2">
                   <input
                     type="text"
-                    placeholder="Your Name *"
+                    placeholder="Votre nom *"
                     required
                     value={leadName}
                     onChange={(e) => setLeadName(e.target.value)}
@@ -373,7 +373,7 @@ export default function AIChatbot({
                   />
                   <input
                     type="text"
-                    placeholder="Company Name"
+                    placeholder="Nom de l'entreprise"
                     value={leadCompany}
                     onChange={(e) => setLeadCompany(e.target.value)}
                     className="w-full rounded border border-gray-200 bg-white p-2 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -381,7 +381,7 @@ export default function AIChatbot({
                   <div className="grid grid-cols-2 gap-1.5">
                     <input
                       type="email"
-                      placeholder="Email Address *"
+                      placeholder="Adresse e-mail *"
                       required
                       value={leadEmail}
                       onChange={(e) => setLeadEmail(e.target.value)}
@@ -389,7 +389,7 @@ export default function AIChatbot({
                     />
                     <input
                       type="tel"
-                      placeholder="Phone *"
+                      placeholder="Téléphone *"
                       required
                       value={leadPhone}
                       onChange={(e) => setLeadPhone(e.target.value)}
@@ -397,7 +397,7 @@ export default function AIChatbot({
                     />
                   </div>
                   <textarea
-                    placeholder="Project Description (e.g. ERP integration, recruitment support, call center outsourcing) *"
+                    placeholder="Description du projet (ex. intégration ERP, support au recrutement, externalisation de centre d'appels) *"
                     required
                     rows={3}
                     value={leadDesc}
@@ -407,7 +407,7 @@ export default function AIChatbot({
                   <div className="grid grid-cols-2 gap-1.5">
                     <div>
                       <label className="block text-[9px] text-gray-500 font-bold uppercase">
-                        Budget Range
+                        Fourchette de budget
                       </label>
                       <select
                         value={leadBudget}
@@ -423,16 +423,16 @@ export default function AIChatbot({
                     </div>
                     <div>
                       <label className="block text-[9px] text-gray-500 font-bold uppercase">
-                        Deadline
+                        Délai
                       </label>
                       <select
-                        value={leadDeadline}
-                        onChange={(e) => setLeadDeadline(e.target.value)}
+                        value={leadDélai}
+                        onChange={(e) => setLeadDélai(e.target.value)}
                         className="w-full rounded border border-gray-200 bg-white p-1.5 text-[10px] focus:ring-1 focus:ring-blue-900 focus:outline-none"
                       >
-                        <option>Immediate (1 mo)</option>
-                        <option>3 Months</option>
-                        <option>6 Months</option>
+                        <option>Immédiat (1 mois)</option>
+                        <option>3 mois</option>
+                        <option>6 mois</option>
                         <option>Flexible (2026)</option>
                       </select>
                     </div>
@@ -444,14 +444,14 @@ export default function AIChatbot({
                       disabled={isSubmittingForm}
                       className="flex-1 bg-blue-900 hover:bg-blue-950 text-white rounded py-2 text-xs font-semibold transition shadow-sm disabled:opacity-55"
                     >
-                      {isSubmittingForm ? "Submitting..." : "Register Lead"}
+                      {isSubmittingForm ? "Envoi en cours..." : "Enregistrer la demande"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowLeadForm(false)}
                       className="border border-gray-300 text-gray-600 rounded px-3 py-2 text-xs hover:bg-gray-100 transition"
                     >
-                      Cancel
+                      Annuler
                     </button>
                   </div>
                 </form>
@@ -482,7 +482,7 @@ export default function AIChatbot({
           <div className="p-3 border-t border-gray-200 bg-white flex items-center space-x-2">
             <input
               type="text"
-              placeholder="Ask anything about our services..."
+              placeholder="Posez vos questions sur nos services..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) =>

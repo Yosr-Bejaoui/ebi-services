@@ -11,19 +11,24 @@ import {
 export default function AboutView() {
   const values = [
     {
-      icon: <ShieldCheck className="h-5 w-5 text-blue-900" />,
-      title: "Security & Compliance",
-      desc: "All client data, contracts, and systems comply with strict European frameworks. We prioritize system containment and complete cybersecurity auditing.",
+      icon: <Target className="h-5 w-5 text-blue-900" />,
+      title: "Performance",
+      desc: "Nous concevons des opérations hautement performantes pour répondre à vos exigences de croissance.",
     },
     {
-      icon: <Target className="h-5 w-5 text-blue-900" />,
-      title: "Agile Delivery Systems",
-      desc: "We employ rapid iteration paradigms. Clients gain direct live portal tracking of our software sprints, recruiting funnels, and support latency stats.",
+      icon: <ShieldCheck className="h-5 w-5 text-blue-900" />,
+      title: "Sécurité",
+      desc: "Nous accordons une priorité absolue à la sécurisation des systèmes et à la protection de l'infrastructure informatique.",
     },
     {
       icon: <HeartHandshake className="h-5 w-5 text-blue-900" />,
-      title: "Absolute Professionalism",
-      desc: "From bilingual call agents to expert systems engineers, EBI delegates elite human assets pre-vetted via extensive screening protocols.",
+      title: "Solutions personnalisées",
+      desc: "Nous accompagnons nos partenaires à travers plus de 5 pays avec des solutions adaptées à leurs besoins et à leurs enjeux.",
+    },
+    {
+      icon: <Eye className="h-5 w-5 text-blue-900" />,
+      title: "Amélioration continue",
+      desc: "Nous assurons une amélioration continue des performances digitales pour garantir votre résilience opérationnelle.",
     },
   ];
 
@@ -33,15 +38,13 @@ export default function AboutView() {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <span className="text-xs font-bold uppercase tracking-widest text-blue-600">
-            Company Overview
+            Aperçu de l'entreprise
           </span>
           <h1 className="font-display text-4xl font-extrabold text-slate-900 sm:text-5.5xl leading-none">
-            Elite Corporate Support & Custom Software Engineering
+            EBI Services
           </h1>
           <p className="text-sm text-gray-500 leading-relaxed">
-            Founded in Paris, EBI Services delivers custom software ecosystems,
-            IT technical recruiting pipelines, and scalable back-office
-            tele-services to enterprises worldwide.
+            Depuis plus de 8 ans, EBI Services accompagne ses partenaires à travers plus de 5 pays, en proposant des solutions adaptées à leurs besoins et à leurs enjeux. L'entreprise met l'accent sur la performance, la sécurité, les solutions personnalisées et l'amélioration continue des performances digitales.
           </p>
         </div>
       </section>
@@ -50,14 +53,14 @@ export default function AboutView() {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center max-w-xl mx-auto">
           <h2 className="font-display text-2.5xl font-bold text-slate-900">
-            Our Core Pillars
+            Nos piliers fondamentaux
           </h2>
           <p className="text-xs text-gray-400 mt-1">
-            The values driving EBI Services' daily operations and global SLAs.
+            Les valeurs qui guident les opérations quotidiennes et les SLA mondiaux d'EBI Services.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
           {values.map((v, i) => (
             <div
               key={i}
@@ -80,26 +83,22 @@ export default function AboutView() {
         <div className="rounded-3xl border border-gray-200 bg-white p-8 md:p-12 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-4 text-left">
             <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">
-              Global Leadership
+              Orienté Solutions
             </span>
             <h2 className="font-display text-2.5xl font-bold text-slate-900">
-              We Architect Operations So You Can Focus on Innovation
+              Des solutions personnalisées pour vos enjeux
             </h2>
             <p className="text-xs text-gray-500 leading-relaxed">
-              Our multidisciplinary approach breaks down standard barriers
-              between software, recruitment, and customer operations. We provide
-              a single, unified client portal that aggregates all service
-              quotes, scheduling calendars, documents, and secure team chats
-              into a seamless dashboard.
+              EBI Services est dédiée à l'amélioration de vos infrastructures IT et à la performance digitale. Depuis plus de 8 ans sur le marché, nous bâtissons des relations de confiance avec des partenaires dans plus de 5 pays à travers le monde.
             </p>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2 text-xs font-semibold text-gray-700">
                 <Briefcase className="h-4 w-4 text-blue-900" />
-                <span>3 Core Departments</span>
+                <span>+8 Ans d'Expérience</span>
               </div>
               <div className="flex items-center space-x-2 text-xs font-semibold text-gray-700">
-                <Award className="h-4 w-4 text-blue-900" />
-                <span>ISO 27001 Prepared</span>
+                <Target className="h-4 w-4 text-blue-900" />
+                <span>Solutions personnalisées</span>
               </div>
             </div>
           </div>
@@ -107,22 +106,10 @@ export default function AboutView() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white">
               <Eye className="h-5 w-5" />
             </div>
-            <h3 className="font-display text-lg font-bold">Our Vision</h3>
+            <h3 className="font-display text-lg font-bold">Notre vision</h3>
             <p className="text-xs text-blue-100 leading-relaxed">
-              "To remain the absolute gold standard for corporate operations,
-              software delegation, and recruitment outsourcing. We aim to
-              combine high-performance software systems with premium human
-              assets, creating absolute operational resilience for our
-              clientele."
+              "L'entreprise met l'accent sur la performance, la sécurité, les solutions personnalisées et l'amélioration continue des performances digitales."
             </p>
-            <div className="pt-2">
-              <span className="block text-xs font-bold">
-                Jean-Pierre Laurent
-              </span>
-              <span className="block text-[10px] text-blue-300">
-                CEO & Founder, EBI Services
-              </span>
-            </div>
           </div>
         </div>
       </section>

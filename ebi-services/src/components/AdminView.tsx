@@ -427,8 +427,8 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
     } else {
       csvContent += "Financial Metric,Value\n";
       csvContent += `"Total CRM Leads",${leads.length}\n`;
-      csvContent += `"Active Clients",${analytics?.totalClients || 0}\n`;
-      csvContent += `"Pending Quote Proposals",${analytics?.pendingQuotes || 0}\n`;
+      csvContent += `"Clients actifs",${analytics?.totalClients || 0}\n`;
+      csvContent += `"Pending Propositions de devis",${analytics?.pendingQuotes || 0}\n`;
       csvContent += `"Accepted Project Revenue",${analytics?.revenue || 0}\n`;
       csvContent += `"Corporate Conversion Rate",${analytics?.conversionRate || 0}%\n`;
     }
@@ -528,13 +528,13 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
         <div className="space-y-1">
           <span className="text-[10px] uppercase font-bold text-red-700 bg-red-50 px-2.5 py-0.5 rounded border border-red-100 flex items-center w-fit gap-1.5 animate-pulse">
             <span className="h-1.5 w-1.5 rounded-full bg-red-600"></span>
-            Executive CRM Command Center
+            Centre de commande CRM exécutif
           </span>
           <h1 className="font-display text-2xl font-bold text-slate-900">
-            EBI CRM & SLA Dashboard
+            Tableau de bord EBI CRM et SLA
           </h1>
           <p className="text-xs text-gray-500">
-            Secure admin authorization active: {currentUser.name}
+            Autorisation d'administration sécurisée active : {currentUser.name}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -550,14 +550,14 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
             className="rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 bg-white px-3.5 py-2 text-xs font-semibold shadow-sm flex items-center gap-1.5 cursor-pointer"
           >
             <FileDown className="h-4 w-4" />
-            <span>Export Leads</span>
+            <span>Exporter les prospects</span>
           </button>
           <button
             onClick={() => handleExportCSV("financials")}
             className="rounded-lg bg-blue-900 hover:bg-blue-950 text-white px-3.5 py-2 text-xs font-semibold shadow flex items-center gap-1.5 cursor-pointer"
           >
             <BarChart3 className="h-4 w-4" />
-            <span>Export Analytics</span>
+            <span>Exporter les analyses</span>
           </button>
         </div>
       </div>
@@ -566,13 +566,13 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
       <div className="border-b border-gray-200">
         <nav className="flex space-x-6 text-xs font-bold tracking-wide uppercase">
           {[
-            { id: "dashboard", label: "CRM Analytics" },
-            { id: "crm", label: "Manage Leads" },
-            { id: "quotes", label: "Quote Proposals" },
-            { id: "appointments", label: "Appointments Board" },
+            { id: "dashboard", label: "Analyses CRM" },
+            { id: "crm", label: "Gérer les prospects" },
+            { id: "quotes", label: "Propositions de devis" },
+            { id: "appointments", label: "Tableau des rendez-vous" },
             { id: "messages", label: "Messages" },
-            { id: "settings", label: "System Configs" },
-            { id: "logs", label: "Audits Logs" },
+            { id: "settings", label: "Configurations système" },
+            { id: "logs", label: "Journaux d'audits" },
           ].map((sub) => (
             <button
               key={sub.id}
@@ -598,57 +598,57 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
           <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm text-left">
               <span className="block text-[10px] text-gray-400 font-bold uppercase">
-                Total Leads
+                Total des prospects
               </span>
               <span className="block text-2.5xl font-extrabold text-slate-900 mt-1">
                 {analytics?.totalLeads || 0}
               </span>
               <span className="block text-[9px] text-gray-500 mt-1">
-                Acquired leads
+                Prospects acquis
               </span>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm text-left">
               <span className="block text-[10px] text-gray-400 font-bold uppercase">
-                Active Clients
+                Clients actifs
               </span>
               <span className="block text-2.5xl font-extrabold text-slate-900 mt-1">
                 {analytics?.totalClients || 0}
               </span>
               <span className="block text-[9px] text-gray-500 mt-1">
-                Portal accounts
+                Comptes portail
               </span>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm text-left">
               <span className="block text-[10px] text-gray-400 font-bold uppercase">
-                SLA Conversion
+                Conversion SLA
               </span>
               <span className="block text-2.5xl font-extrabold text-slate-900 mt-1">
                 {analytics?.conversionRate || 0}%
               </span>
               <span className="block text-[9px] text-gray-500 mt-1">
-                Acceptance funnel
+                Entonnoir d'acceptation
               </span>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm text-left">
               <span className="block text-[10px] text-gray-400 font-bold uppercase">
-                Accepted Revenue
+                Revenus acceptés
               </span>
               <span className="block text-2.5xl font-extrabold text-emerald-700 mt-1">
                 €{(analytics?.revenue || 0).toLocaleString()}
               </span>
               <span className="block text-[9px] text-gray-500 mt-1">
-                Contracts signed
+                Contrats signés
               </span>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm text-left">
               <span className="block text-[10px] text-gray-400 font-bold uppercase">
-                Pending Estimates
+                Devis en attente
               </span>
               <span className="block text-2.5xl font-extrabold text-amber-600 mt-1">
                 €{(analytics?.pendingQuoteAmount || 0).toLocaleString()}
               </span>
               <span className="block text-[9px] text-gray-500 mt-1">
-                Quotes awaiting client
+                Devis en attente du client
               </span>
             </div>
           </div>
@@ -659,7 +659,7 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
             <div className="md:col-span-8 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm text-left space-y-4">
               <div>
                 <h3 className="font-display text-sm font-bold text-slate-900">
-                  Performance Over Time
+                  Performance au fil du temps
                 </h3>
                 <p className="text-[10px] text-gray-400">
                   Monthly breakdown of contracted revenue against leads
@@ -705,10 +705,10 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
             <div className="md:col-span-4 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm text-left space-y-4">
               <div>
                 <h3 className="font-display text-sm font-bold text-slate-900">
-                  Leads by Department
+                  Prospects par département
                 </h3>
                 <p className="text-[10px] text-gray-400">
-                  Demand distribution across our three operational pillars.
+                  Répartition de la demande sur nos trois piliers opérationnels.
                 </p>
               </div>
               <div className="h-44 relative flex items-center justify-center">
@@ -767,10 +767,10 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-gray-100 pb-4 text-left">
             <div>
               <h3 className="font-display text-sm font-bold text-slate-950">
-                Acquired CRM Leads
+                Prospects CRM acquis
               </h3>
               <p className="text-[10px] text-gray-400">
-                Search, filter, and review lead requests classified by AI.
+                Recherchez, filtrez et examinez les demandes de prospects classées par l'IA.
               </p>
             </div>
 
@@ -780,7 +780,7 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search leads..."
+                  placeholder="Rechercher des prospects..."
                   value={leadSearch}
                   onChange={(e) => setLeadSearch(e.target.value)}
                   className="rounded-lg border border-gray-200 pl-8 pr-3 py-2 text-xs w-full sm:w-48 focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -791,10 +791,10 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
                 onChange={(e) => setLeadDeptFilter(e.target.value)}
                 className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs focus:outline-none"
               >
-                <option value="all">All Departments</option>
-                <option value="Development">Development</option>
-                <option value="Recruitment">Recruitment</option>
-                <option value="Outsourcing">Outsourcing</option>
+                <option value="all">Tous les départements</option>
+                <option value="Development">Développement</option>
+                <option value="Recruitment">Recrutement</option>
+                <option value="Outsourcing">Externalisation</option>
               </select>
               <select
                 value={leadStatusFilter}
@@ -992,13 +992,13 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
                     <div className="grid grid-cols-2 gap-4 text-[10px] text-gray-400">
                       <div>
                         <span className="font-bold text-slate-900">
-                          Budget:
+                          Budget :
                         </span>{" "}
                         {req.budget}
                       </div>
                       <div>
                         <span className="font-bold text-slate-900">
-                          Deadline:
+                          Délai :
                         </span>{" "}
                         {req.deadline}
                       </div>
@@ -1046,7 +1046,7 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
               <form onSubmit={handleIssueQuote} className="space-y-4 text-left">
                 <div className="bg-slate-50 p-3 rounded-lg border border-gray-200 text-xs space-y-1">
                   <div>
-                    <span className="font-bold text-slate-900">Project:</span>{" "}
+                    <span className="font-bold text-slate-900">Projet :</span>{" "}
                     {selectedReq.projectType}
                   </div>
                   <div>
@@ -1055,7 +1055,7 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
                   </div>
                   <div>
                     <span className="font-bold text-slate-900">
-                      Stated Budget:
+                      Stated Budget :
                     </span>{" "}
                     {selectedReq.budget}
                   </div>
