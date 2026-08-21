@@ -2,10 +2,9 @@
 
 Welcome to the EBI Services project!
 
-This project is structured into three main parts:
+This project is structured into two main parts:
 - `backend`: The server-side code.
-- `frontend`: The client-side code.
-- `ebi-services`: The core services and React components.
+- `frontend`: The core services and React components.
 
 ## Getting Started
 
