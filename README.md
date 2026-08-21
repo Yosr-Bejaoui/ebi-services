@@ -6,11 +6,11 @@
   </p>
 </div>
 
-## 📖 About The Project
+## About The Project
 
 EBI Services is a full-stack web application designed to facilitate interactions between clients and the service provider. Clients can learn about services, request quotes (*devis*), and contact support. Administrators have access to a secure portal to manage messages, process quote requests, and oversee platform operations.
 
-## 🛠️ Built With
+## Built With
 
 This project is built using a modern, scalable technology stack:
 
@@ -28,14 +28,14 @@ This project is built using a modern, scalable technology stack:
 - **[Multer](https://github.com/expressjs/multer)** - Middleware for handling file uploads
 - **[Nodemailer](https://nodemailer.com/)** - Module for sending emails
 
-## 📁 Project Structure
+## Project Structure
 
 The repository is organized into two main workspaces:
 
 - `frontend/`: Contains the React application. It includes all UI components, views (`HomeView`, `AdminView`, `ContactView`, etc.), styles, and client-side logic.
 - `backend/`: Contains the Express server. It handles business logic, database models, REST API routes (authentication, messaging, quotes), and email services.
 
-## ✨ Features
+## Features
 
 - **Responsive Landing Page:** Modern and dynamic interface for clients to explore services.
 - **Quote Requests (Devis):** Users can easily request and submit details for project quotes.
@@ -45,7 +45,7 @@ The repository is organized into two main workspaces:
 - **File Uploads:** Support for attaching documents using Multer.
 - **Email Notifications:** Automated emails managed via Nodemailer.
 
-## 🚀 Getting Started
+## Getting Started
 
 To get a local copy up and running, follow these simple steps.
 
@@ -77,7 +77,7 @@ Ensure you have the following installed on your local machine:
    ```
    *Create a `.env` file in the `frontend` directory if there are any specific Vite environment variables (e.g., `VITE_API_URL`).*
 
-## 🚦 Running the Application
+## Running the Application
 
 To run the application locally, you will need to start both the backend server and the frontend development server.
 
@@ -95,6 +95,6 @@ npm run dev
 ```
 *(The frontend typically runs on `http://localhost:5173`)*
 
-## 📜 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
