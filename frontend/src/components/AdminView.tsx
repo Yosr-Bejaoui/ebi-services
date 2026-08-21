@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Users,
   TrendingUp,
@@ -41,16 +41,10 @@ import {
   Quote,
   ActivityLog,
   SystemSettings,
+  Conversation,
+  Message,
 } from "../types";
 import { clientDb } from "../clientDb";
-import { apiGetUsers, apiGetUsersByRole } from "../api/auth";
-import {
-  apiGetDemandes,
-  apiGetDevis,
-  apiUpdateDemande,
-  apiCreateDevis,
-  apiUpdateDevis,
-} from "../api/quotes";
 
 interface AdminViewProps {
   currentUser: User;
@@ -59,7 +53,7 @@ interface AdminViewProps {
 
 export default function AdminView({ currentUser, token }: AdminViewProps) {
   const [adminSubTab, setAdminSubTab] = useState<
-    "dashboard" | "crm" | "quotes" | "appointments" | "settings" | "logs"
+    "dashboard" | "crm" | "quotes" | "appointments" | "settings" | "logs" | "messages"
   >("dashboard");
 
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -67,6 +61,10 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
   const [quoteRequests, setQuoteRequests] = useState<QuoteRequest[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
+  const [replyText, setReplyText] = useState("");
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [analytics, setAnalytics] = useState<any>(null);
 
@@ -93,6 +91,12 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
   const [emailTemplateQuote, setEmailTemplateQuote] = useState("");
   const [emailTemplateAppointment, setEmailTemplateAppointment] = useState("");
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, selectedConv]);
+
   useEffect(() => {
     fetchAdminData();
     const interval = setInterval(fetchAdminData, 12000);
@@ -100,46 +104,6 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
   }, [token]);
 
   const fetchAdminData = async () => {
-    // Try API for users / demandes / devis
-    try {
-      const demandes = await apiGetDemandes();
-      if (demandes && demandes.length > 0) {
-        const mapped: QuoteRequest[] = demandes.map((d: any) => ({
-          id: d._id,
-          userId: typeof d.client === 'object' ? d.client._id : d.client,
-          clientName: typeof d.client === 'object' ? d.client.fullname : '',
-          company: '',
-          industry: typeof d.service === 'object' ? d.service.nom || '' : '',
-          projectType: typeof d.service === 'object' ? d.service.nom || '' : '',
-          budget: '',
-          deadline: '',
-          requirements: d.besoin,
-          status: mapStatut(d.statut),
-          createdAt: d.createdAt,
-        }));
-        setQuoteRequests(mapped);
-      }
-    } catch { /* fallback */ }
-
-    try {
-      const devisList = await apiGetDevis();
-      if (devisList && devisList.length > 0) {
-        const mapped: Quote[] = devisList.map((d: any) => ({
-          id: d._id,
-          quoteRequestId: typeof d.demande === 'object' ? d.demande._id : d.demande,
-          clientName: '',
-          projectName: `Devis ${d._id.slice(-6)}`,
-          amount: d.montant,
-          terms: '',
-          expiryDate: '',
-          status: mapDevisStatut(d.statut),
-          createdAt: d.createdAt,
-        }));
-        setQuotes(mapped);
-      }
-    } catch { /* fallback */ }
-
-    // Try clientDb for all data (fills gaps the API doesn't cover)
     try {
       const rLeads = clientDb.getLeads();
       const rApts = clientDb.getAppointments();
@@ -148,11 +112,80 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
       const rLogs = clientDb.getLogs();
       const rSettings = clientDb.getSettings();
 
+      const rConvs = clientDb.getConversations();
+      const rMsgs = clientDb.getMessages();
+
       setLeads(rLeads);
       setAppointments(rApts);
-      if (rReqs.length > 0) setQuoteRequests(rReqs);
-      if (rQuotes.length > 0) setQuotes(rQuotes);
+      setQuoteRequests(rReqs);
+      setQuotes(rQuotes);
       setLogs(rLogs);
+
+      try {
+        const token = sessionStorage.getItem('ebi_access_token');
+        const msgsRes = await fetch('http://127.0.0.1:5001/api/messages', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (msgsRes.ok) {
+          const apiMsgs = await msgsRes.json();
+          const dynamicConvsMap = new Map<string, Conversation>();
+
+          const mappedApiMsgs: Message[] = apiMsgs.map((m: any) => {
+             const clientId = m.client?._id || m.client || "unknown";
+             const clientName = m.client?.fullname || "Unknown Client";
+             const isClientSender = (m.expediteur?._id || m.expediteur) === clientId;
+
+             if (!dynamicConvsMap.has(clientId)) {
+                 dynamicConvsMap.set(clientId, {
+                     id: `conv-${clientId}`,
+                     userId: clientId,
+                     clientName: clientName,
+                     clientEmail: m.client?.email || "Unknown",
+                     status: "active",
+                     summary: m.contenu?.substring(0, 30) + "...",
+                     lastMessageAt: m.createdAt
+                 });
+             } else {
+                 const c = dynamicConvsMap.get(clientId)!;
+                 if (new Date(m.createdAt) > new Date(c.lastMessageAt)) {
+                     c.lastMessageAt = m.createdAt;
+                     c.summary = m.contenu?.substring(0, 30) + "...";
+                 }
+             }
+
+             return {
+                id: m._id,
+                conversationId: `conv-${clientId}`,
+                senderId: m.expediteur?._id || m.expediteur,
+                senderName: isClientSender ? clientName : "Admin",
+                senderRole: isClientSender ? "client" : "admin",
+                text: m.contenu,
+                timestamp: m.createdAt
+             };
+          });
+
+          const sortedConvs = [...rConvs.filter(lc => !dynamicConvsMap.has(lc.userId)), ...Array.from(dynamicConvsMap.values())].sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+          setConversations(sortedConvs);
+          setMessages([...rMsgs, ...mappedApiMsgs]);
+          
+          if (!selectedConv && sortedConvs.length > 0) {
+            setSelectedConv(sortedConvs[0]);
+          }
+        } else {
+          setConversations(rConvs);
+          setMessages(rMsgs);
+          if (!selectedConv && rConvs.length > 0) {
+            setSelectedConv(rConvs[0]);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch API messages for AdminView", e);
+        setConversations(rConvs);
+        setMessages(rMsgs);
+        if (!selectedConv && rConvs.length > 0) {
+          setSelectedConv(rConvs[0]);
+        }
+      }
 
       const totalLeads = rLeads.length;
       const totalClients = clientDb
@@ -221,26 +254,6 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
       console.error("Admin fetch failed:", e);
     }
   };
-
-  function mapStatut(s: string): QuoteRequest["status"] {
-    const map: Record<string, QuoteRequest["status"]> = {
-      en_attente: "new",
-      en_cours: "in_review",
-      devis_envoye: "quoted",
-      accepte: "accepted",
-      refuse: "rejected",
-    };
-    return map[s] || "new";
-  }
-
-  function mapDevisStatut(s: string): Quote["status"] {
-    const map: Record<string, Quote["status"]> = {
-      envoye: "sent",
-      telecharge: "sent",
-      archive: "rejected",
-    };
-    return map[s] || "sent";
-  }
 
   const handleUpdateLead = (leadId: string, updates: Partial<Lead>) => {
     try {
@@ -414,8 +427,8 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
     } else {
       csvContent += "Financial Metric,Value\n";
       csvContent += `"Total CRM Leads",${leads.length}\n`;
-      csvContent += `"Active Clients",${analytics?.totalClients || 0}\n`;
-      csvContent += `"Pending Quote Proposals",${analytics?.pendingQuotes || 0}\n`;
+      csvContent += `"Clients actifs",${analytics?.totalClients || 0}\n`;
+      csvContent += `"Pending Propositions de devis",${analytics?.pendingQuotes || 0}\n`;
       csvContent += `"Accepted Project Revenue",${analytics?.revenue || 0}\n`;
       csvContent += `"Corporate Conversion Rate",${analytics?.conversionRate || 0}%\n`;
     }
@@ -430,6 +443,54 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleReply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedConv || !replyText.trim()) return;
+
+    try {
+      try {
+        await fetch('http://127.0.0.1:5001/api/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            client: selectedConv.userId,
+            expediteur: currentUser.id,
+            contenu: replyText
+          })
+        });
+      } catch (err) {
+        console.error("Backend message failed", err);
+      }
+
+      const msgsList = clientDb.getMessages();
+      const newMsg: Message = {
+        id: `msg-${Math.random().toString(36).substring(2, 11)}`,
+        conversationId: selectedConv.id,
+        senderId: currentUser.id,
+        senderName: currentUser.name,
+        senderRole: currentUser.role,
+        text: replyText,
+        timestamp: new Date().toISOString(),
+      };
+      clientDb.setMessages([...msgsList, newMsg]);
+
+      const convsList = clientDb.getConversations();
+      const conv = convsList.find(c => c.id === selectedConv.id);
+      if (conv) {
+        conv.lastMessageAt = new Date().toISOString();
+        clientDb.setConversations(convsList);
+      }
+
+      setReplyText("");
+      fetchAdminData();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const filteredLeads = leads.filter((lead) => {
@@ -467,13 +528,13 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
         <div className="space-y-1">
           <span className="text-[10px] uppercase font-bold text-red-700 bg-red-50 px-2.5 py-0.5 rounded border border-red-100 flex items-center w-fit gap-1.5 animate-pulse">
             <span className="h-1.5 w-1.5 rounded-full bg-red-600"></span>
-            Executive CRM Command Center
+            Centre de commande CRM exécutif
           </span>
           <h1 className="font-display text-2xl font-bold text-slate-900">
-            EBI CRM & SLA Dashboard
+            Tableau de bord EBI CRM et SLA
           </h1>
           <p className="text-xs text-gray-500">
-            Secure admin authorization active: {currentUser.name}
+            Autorisation d'administration sécurisée active : {currentUser.name}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -489,14 +550,14 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
             className="rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 bg-white px-3.5 py-2 text-xs font-semibold shadow-sm flex items-center gap-1.5 cursor-pointer"
           >
             <FileDown className="h-4 w-4" />
-            <span>Export Leads</span>
+            <span>Exporter les prospects</span>
           </button>
           <button
             onClick={() => handleExportCSV("financials")}
             className="rounded-lg bg-blue-900 hover:bg-blue-950 text-white px-3.5 py-2 text-xs font-semibold shadow flex items-center gap-1.5 cursor-pointer"
           >
             <BarChart3 className="h-4 w-4" />
-            <span>Export Analytics</span>
+            <span>Exporter les analyses</span>
           </button>
         </div>
       </div>
@@ -505,12 +566,13 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
       <div className="border-b border-gray-200">
         <nav className="flex space-x-6 text-xs font-bold tracking-wide uppercase">
           {[
-            { id: "dashboard", label: "CRM Analytics" },
-            { id: "crm", label: "Manage Leads" },
-            { id: "quotes", label: "Quote Proposals" },
-            { id: "appointments", label: "Appointments Board" },
-            { id: "settings", label: "System Configs" },
-            { id: "logs", label: "Audits Logs" },
+            { id: "dashboard", label: "Analyses CRM" },
+            { id: "crm", label: "Gérer les prospects" },
+            { id: "quotes", label: "Propositions de devis" },
+            { id: "appointments", label: "Tableau des rendez-vous" },
+            { id: "messages", label: "Messages" },
+            { id: "settings", label: "Configurations système" },
+            { id: "logs", label: "Journaux d'audits" },
           ].map((sub) => (
             <button
               key={sub.id}
@@ -536,57 +598,57 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
           <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm text-left">
               <span className="block text-[10px] text-gray-400 font-bold uppercase">
-                Total Leads
+                Total des prospects
               </span>
               <span className="block text-2.5xl font-extrabold text-slate-900 mt-1">
                 {analytics?.totalLeads || 0}
               </span>
               <span className="block text-[9px] text-gray-500 mt-1">
-                Acquired leads
+                Prospects acquis
               </span>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm text-left">
               <span className="block text-[10px] text-gray-400 font-bold uppercase">
-                Active Clients
+                Clients actifs
               </span>
               <span className="block text-2.5xl font-extrabold text-slate-900 mt-1">
                 {analytics?.totalClients || 0}
               </span>
               <span className="block text-[9px] text-gray-500 mt-1">
-                Portal accounts
+                Comptes portail
               </span>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm text-left">
               <span className="block text-[10px] text-gray-400 font-bold uppercase">
-                SLA Conversion
+                Conversion SLA
               </span>
               <span className="block text-2.5xl font-extrabold text-slate-900 mt-1">
                 {analytics?.conversionRate || 0}%
               </span>
               <span className="block text-[9px] text-gray-500 mt-1">
-                Acceptance funnel
+                Entonnoir d'acceptation
               </span>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm text-left">
               <span className="block text-[10px] text-gray-400 font-bold uppercase">
-                Accepted Revenue
+                Revenus acceptés
               </span>
               <span className="block text-2.5xl font-extrabold text-emerald-700 mt-1">
                 €{(analytics?.revenue || 0).toLocaleString()}
               </span>
               <span className="block text-[9px] text-gray-500 mt-1">
-                Contracts signed
+                Contrats signés
               </span>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm text-left">
               <span className="block text-[10px] text-gray-400 font-bold uppercase">
-                Pending Estimates
+                Devis en attente
               </span>
               <span className="block text-2.5xl font-extrabold text-amber-600 mt-1">
                 €{(analytics?.pendingQuoteAmount || 0).toLocaleString()}
               </span>
               <span className="block text-[9px] text-gray-500 mt-1">
-                Quotes awaiting client
+                Devis en attente du client
               </span>
             </div>
           </div>
@@ -597,7 +659,7 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
             <div className="md:col-span-8 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm text-left space-y-4">
               <div>
                 <h3 className="font-display text-sm font-bold text-slate-900">
-                  Performance Over Time
+                  Performance au fil du temps
                 </h3>
                 <p className="text-[10px] text-gray-400">
                   Monthly breakdown of contracted revenue against leads
@@ -643,10 +705,10 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
             <div className="md:col-span-4 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm text-left space-y-4">
               <div>
                 <h3 className="font-display text-sm font-bold text-slate-900">
-                  Leads by Department
+                  Prospects par département
                 </h3>
                 <p className="text-[10px] text-gray-400">
-                  Demand distribution across our three operational pillars.
+                  Répartition de la demande sur nos trois piliers opérationnels.
                 </p>
               </div>
               <div className="h-44 relative flex items-center justify-center">
@@ -705,10 +767,10 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-gray-100 pb-4 text-left">
             <div>
               <h3 className="font-display text-sm font-bold text-slate-950">
-                Acquired CRM Leads
+                Prospects CRM acquis
               </h3>
               <p className="text-[10px] text-gray-400">
-                Search, filter, and review lead requests classified by AI.
+                Recherchez, filtrez et examinez les demandes de prospects classées par l'IA.
               </p>
             </div>
 
@@ -718,7 +780,7 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search leads..."
+                  placeholder="Rechercher des prospects..."
                   value={leadSearch}
                   onChange={(e) => setLeadSearch(e.target.value)}
                   className="rounded-lg border border-gray-200 pl-8 pr-3 py-2 text-xs w-full sm:w-48 focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -729,10 +791,10 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
                 onChange={(e) => setLeadDeptFilter(e.target.value)}
                 className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs focus:outline-none"
               >
-                <option value="all">All Departments</option>
-                <option value="Development">Development</option>
-                <option value="Recruitment">Recruitment</option>
-                <option value="Outsourcing">Outsourcing</option>
+                <option value="all">Tous les départements</option>
+                <option value="Development">Développement</option>
+                <option value="Recruitment">Recrutement</option>
+                <option value="Outsourcing">Externalisation</option>
               </select>
               <select
                 value={leadStatusFilter}
@@ -930,13 +992,13 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
                     <div className="grid grid-cols-2 gap-4 text-[10px] text-gray-400">
                       <div>
                         <span className="font-bold text-slate-900">
-                          Budget:
+                          Budget :
                         </span>{" "}
                         {req.budget}
                       </div>
                       <div>
                         <span className="font-bold text-slate-900">
-                          Deadline:
+                          Délai :
                         </span>{" "}
                         {req.deadline}
                       </div>
@@ -984,7 +1046,7 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
               <form onSubmit={handleIssueQuote} className="space-y-4 text-left">
                 <div className="bg-slate-50 p-3 rounded-lg border border-gray-200 text-xs space-y-1">
                   <div>
-                    <span className="font-bold text-slate-900">Project:</span>{" "}
+                    <span className="font-bold text-slate-900">Projet :</span>{" "}
                     {selectedReq.projectType}
                   </div>
                   <div>
@@ -993,7 +1055,7 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
                   </div>
                   <div>
                     <span className="font-bold text-slate-900">
-                      Stated Budget:
+                      Stated Budget :
                     </span>{" "}
                     {selectedReq.budget}
                   </div>
@@ -1167,6 +1229,87 @@ export default function AdminView({ currentUser, token }: AdminViewProps) {
       {}
       {}
       {}
+      {adminSubTab === "messages" && (
+        <div className="grid grid-cols-1 md:grid-cols-12 items-stretch h-[600px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          {/* Left: Conversation List */}
+          <div className="md:col-span-4 border-r border-gray-100 flex flex-col overflow-hidden text-left h-full bg-white">
+            <h3 className="font-display text-sm font-bold text-slate-950 p-4 border-b border-gray-100 shrink-0">
+              Active Client Threads ({conversations.length})
+            </h3>
+            <div className="overflow-y-auto flex-1 p-2 space-y-2 min-h-0">
+              {conversations.length === 0 ? (
+                <div className="text-center py-8 text-gray-400 text-xs">No active conversations yet.</div>
+              ) : (
+                conversations.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => setSelectedConv(c)}
+                    className={`w-full text-left p-3 rounded-lg transition cursor-pointer ${
+                      selectedConv?.id === c.id ? "bg-blue-50 border border-blue-200" : "bg-white hover:bg-slate-50 border border-transparent"
+                    }`}
+                  >
+                    <div className="font-bold text-slate-900 text-xs">{c.clientName}</div>
+                    <div className="text-[10px] text-gray-500 truncate">{c.summary || "Conversation started..."}</div>
+                    <div className="text-[9px] text-gray-400 mt-1">{new Date(c.lastMessageAt).toLocaleString()}</div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Right: Chat Messages */}
+          <div className="md:col-span-8 flex flex-col text-left h-full overflow-hidden bg-white">
+            {selectedConv ? (
+              <>
+                <div className="p-4 border-b border-gray-100 flex items-center gap-3 shrink-0 bg-white">
+                  <div className="h-10 w-10 bg-blue-100 text-blue-900 rounded-full flex items-center justify-center font-bold">
+                    {(selectedConv.clientName || "?").charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900 text-sm">{selectedConv.clientName}</div>
+                    <div className="text-[10px] text-gray-500">{selectedConv.clientEmail}</div>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 min-h-0">
+                  {messages.filter(m => m.conversationId === selectedConv.id).map(m => (
+                    <div key={m.id} className={`flex ${m.senderRole === "admin" ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-[70%] p-3 rounded-2xl text-xs ${
+                        m.senderRole === "admin" ? "bg-blue-900 text-white rounded-br-none" : "bg-white border border-gray-200 text-slate-900 rounded-bl-none shadow-sm"
+                      }`}>
+                        <div className="font-bold mb-1">{m.senderName}</div>
+                        <div className="leading-relaxed whitespace-pre-wrap">{m.text}</div>
+                        <div className={`text-[9px] mt-2 ${m.senderRole === "admin" ? "text-blue-200" : "text-gray-400"}`}>
+                          {new Date(m.timestamp).toLocaleTimeString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+                <form onSubmit={handleReply} className="p-4 border-t border-gray-100 flex gap-2 shrink-0 bg-white">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Type a secure admin reply..."
+                    value={replyText}
+                    onChange={e => setReplyText(e.target.value)}
+                    className="flex-1 rounded-lg border border-gray-200 p-2.5 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none bg-white text-slate-900"
+                  />
+                  <button type="submit" className="bg-blue-900 hover:bg-blue-950 text-white rounded-lg px-6 py-2.5 text-xs font-bold shadow cursor-pointer">
+                    Send
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-gray-400 p-8 text-center space-y-3">
+                <MessageCircle className="h-12 w-12 text-gray-200" />
+                <p className="text-xs">Select a conversation thread to view messages.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {adminSubTab === "settings" && (
         <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-6 text-left">
           <div className="border-b border-gray-100 pb-3">

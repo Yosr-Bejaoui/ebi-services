@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import {
   User,
+  UserRole,
   QuoteRequest,
   Quote,
   ClientDocument,
@@ -25,25 +26,14 @@ import {
   Appointment,
 } from "../types";
 import { clientDb } from "../clientDb";
-import { post } from "../api/client";
-import {
-  apiGetDemandesByClient,
-  apiGetDevis,
-  apiUpdateDevis,
-  apiCreateDemande,
-} from "../api/quotes";
-import { apiGetDocumentsByClient, apiUploadDocument, apiDeleteDocument } from "../api/documents";
-import { apiGetMessagesByClient, apiCreateMessage } from "../api/messages";
-import { apiGetNotificationsByUser, apiMarkNotificationRead, apiMarkAllNotificationsRead } from "../api/notifications";
+import { apiClient } from "../services/api";
 
 interface PortalViewProps {
   currentUser: User;
   token: string;
-  pendingBooking?: boolean;
-  onBookingOpened?: () => void;
 }
 
-export default function PortalView({ currentUser, token, pendingBooking, onBookingOpened }: PortalViewProps) {
+export default function PortalView({ currentUser, token }: PortalViewProps) {
   const [activeSubTab, setActiveSubTab] = useState<
     "dashboard" | "quotes" | "appointments" | "chat" | "documents"
   >("dashboard");
@@ -62,10 +52,10 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
   const [aptTimezone, setAptTimezone] = useState("Europe/Paris");
 
   const [isRequestingQuote, setIsRequestingQuote] = useState(false);
-  const [quoteIndustry, setQuoteIndustry] = useState("Retail & E-commerce");
-  const [quoteType, setQuoteType] = useState("Web SaaS Application");
+  const [quoteIndustry, setQuoteIndustry] = useState("Vente au détail et commerce électronique");
+  const [quoteType, setQuoteType] = useState("Application SaaS Web");
   const [quoteBudget, setQuoteBudget] = useState("€10,000 - €25,000");
-  const [quoteDeadline, setQuoteDeadline] = useState("3 Months");
+  const [quoteDeadline, setQuoteDeadline] = useState("3 mois");
   const [quoteRequirements, setQuoteRequirements] = useState("");
   const [uploadedFile, setUploadedFile] = useState<{
     name: string;
@@ -91,249 +81,104 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
     }
   }, [messages]);
 
-  useEffect(() => {
-    if (pendingBooking) {
-      setIsBooking(true);
-      setActiveSubTab("appointments");
-      if (onBookingOpened) onBookingOpened();
-    }
-  }, [pendingBooking, onBookingOpened]);
-
   const fetchPortalData = async () => {
-    let apiUsed = false;
-    // Try API first for demandes
     try {
-      const demandes = await apiGetDemandesByClient(currentUser.id);
-      if (demandes && demandes.length > 0) {
-        const mapped: QuoteRequest[] = demandes.map((d: any) => ({
-          id: d._id,
-          userId: typeof d.client === 'object' ? d.client._id : d.client,
-          clientName: currentUser.name,
-          company: currentUser.companyId || '',
-          industry: typeof d.service === 'object' ? d.service.nom || '' : '',
-          projectType: typeof d.service === 'object' ? d.service.nom || '' : '',
-          budget: '',
-          deadline: '',
-          requirements: d.besoin,
-          status: mapStatut(d.statut),
-          createdAt: d.createdAt,
-        }));
-        setQuoteRequests(mapped);
-        apiUsed = true;
-      }
-    } catch { /* fallback */ }
+      // Fetch from API
+      const rReqsRaw = await apiClient.getDemandesByClient(currentUser.id).catch(() => []);
+      const mappedReqs: QuoteRequest[] = rReqsRaw.map(r => ({
+        id: r._id,
+        userId: r.client,
+        clientName: currentUser.name,
+        company: currentUser.companyId || "Company",
+        industry: "N/A",
+        projectType: typeof r.service === 'string' ? r.service : (r.service as any)?.nom || "Service",
+        budget: "N/A",
+        deadline: "N/A",
+        requirements: r.besoin,
+        status: (r.statut === "en_attente" ? "new" : r.statut === "accepte" ? "accepted" : r.statut === "refuse" ? "rejected" : "waiting") as any,
+        createdAt: r.createdAt
+      }));
+      setQuoteRequests(mappedReqs);
 
-    if (!apiUsed) {
-      try {
-        const rReqs = clientDb
-          .getQuoteRequests()
-          .filter((q) => q.userId === currentUser.id);
-        setQuoteRequests(rReqs);
-      } catch { /* ignore */ }
-    }
+      const rMsgsRaw = await apiClient.getMessagesByClient(currentUser.id).catch(() => []);
+      const mappedMsgs: Message[] = rMsgsRaw.map(m => {
+        const expediteurId = typeof m.expediteur === 'object' && m.expediteur ? (m.expediteur as any)._id : m.expediteur;
+        const isMe = expediteurId === currentUser.id;
+        return {
+          id: m._id,
+          conversationId: "default",
+          senderId: expediteurId,
+          senderName: isMe ? currentUser.name : "Manager",
+          senderRole: (isMe ? "client" : "admin") as UserRole,
+          text: m.contenu,
+          timestamp: m.createdAt
+        };
+      });
+      setMessages(mappedMsgs);
 
-    // Quotes via API
-    try {
-      const devisList = await apiGetDevis();
-      if (devisList && devisList.length > 0) {
-        const mapped: Quote[] = devisList.map((d: any) => ({
-          id: d._id,
-          quoteRequestId: typeof d.demande === 'object' ? d.demande._id : d.demande,
-          clientName: currentUser.name,
-          projectName: `Quote ${d._id.slice(-6)}`,
-          amount: d.montant,
-          terms: '',
-          expiryDate: '',
-          status: mapDevisStatut(d.statut),
-          createdAt: d.createdAt,
-        }));
-        mapDevisToQuoteRequests(mapped);
-        setQuotes(mapped);
-      }
-    } catch {
-      try {
-        const rQuotes = clientDb
-          .getQuotes()
-          .filter((q) => q.clientName === currentUser.name);
-        setQuotes(rQuotes);
-      } catch { /* ignore */ }
-    }
-
-    // Appointments (clientDb only)
-    try {
-      const rApts = clientDb
-        .getAppointments()
-        .filter((a) => a.userId === currentUser.id);
+      // Keep appointments & other unmigrated stuff on clientDb for now
+      const rQuotes = clientDb.getQuotes().filter((q) => q.clientName === currentUser.name);
+      const rApts = clientDb.getAppointments().filter((a) => a.userId === currentUser.id);
+      const rDocs = clientDb.getDocuments().filter((d) => d.userId === currentUser.id);
+      const rNotifs = clientDb.getNotifications().filter((n) => n.userId === currentUser.id);
+      setQuotes(rQuotes);
       setAppointments(rApts);
-    } catch { /* ignore */ }
+      setDocuments(rDocs);
+      setNotifications(rNotifs);
 
-    // Documents via API
-    try {
-      const docs = await apiGetDocumentsByClient(currentUser.id);
-      if (docs && docs.length > 0) {
-        const mapped: ClientDocument[] = docs.map((d: any) => ({
-          id: d._id,
-          userId: currentUser.id,
-          name: d.nom_fichier,
-          type: d.type_mime || 'application/octet-stream',
-          size: d.taille ? `${(d.taille / 1024).toFixed(0)} KB` : 'Unknown',
-          url: d.lien || '#',
-          createdAt: d.createdAt,
-        }));
-        setDocuments(mapped);
-      }
-    } catch {
-      try {
-        const rDocs = clientDb
-          .getDocuments()
-          .filter((d) => d.userId === currentUser.id);
-        setDocuments(rDocs);
-      } catch { /* ignore */ }
+    } catch (e) {
+      console.error("Portal fetch failed:", e);
     }
-
-    // Notifications via API
-    try {
-      const notifs = await apiGetNotificationsByUser(currentUser.id);
-      if (notifs && notifs.length > 0) {
-        const mapped = notifs.map((n: any) => ({
-          id: n._id,
-          userId: currentUser.id,
-          title: n.type,
-          message: n.contenu,
-          read: n.lu,
-          createdAt: n.createdAt,
-        }));
-        setNotifications(mapped);
-      }
-    } catch {
-      try {
-        const rNotifs = clientDb
-          .getNotifications()
-          .filter((n) => n.userId === currentUser.id);
-        setNotifications(rNotifs);
-      } catch { /* ignore */ }
-    }
-
-    // Conversations & Messages (clientDb only)
-    try {
-      const convs = clientDb
-        .getConversations()
-        .filter((c) => c.userId === currentUser.id);
-      if (convs.length > 0) {
-        const activeConv = convs[0];
-        setChatId(activeConv.id);
-        const rMsgs = clientDb
-          .getMessages()
-          .filter((m) => m.conversationId === activeConv.id);
-        setMessages(rMsgs);
-      }
-    } catch { /* ignore */ }
   };
-
-  function mapStatut(s: string): QuoteRequest["status"] {
-    const map: Record<string, QuoteRequest["status"]> = {
-      en_attente: "new",
-      en_cours: "in_review",
-      devis_envoye: "quoted",
-      accepte: "accepted",
-      refuse: "rejected",
-    };
-    return map[s] || "new";
-  }
-
-  function mapDevisStatut(s: string): Quote["status"] {
-    const map: Record<string, Quote["status"]> = {
-      envoye: "sent",
-      telecharge: "sent",
-      archive: "rejected",
-    };
-    return map[s] || "sent";
-  }
-
-  function mapDevisToQuoteRequests(devisList: Quote[]) {
-    const reqs = clientDb.getQuoteRequests();
-    let changed = false;
-    devisList.forEach((d) => {
-      const req = reqs.find((r) => r.id === d.quoteRequestId);
-      if (req && req.status === "in_review") {
-        req.status = "quoted";
-        changed = true;
-      }
-    });
-    if (changed) clientDb.setQuoteRequests(reqs);
-  }
 
   const handleQuoteRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!quoteType || !quoteRequirements) return;
+    if (!quoteType || !quoteRequirements) {
+      alert("Please fill in all required fields, including the Requirements Spec.");
+      return;
+    }
 
-    let apiCreated = false;
     try {
-      const result = await apiCreateDemande({
+      // Fallback service ID lookup if needed, but the backend accepts strings if not strict ObjectId
+      // For now we pass the string, or we should fetch services. But we'll try API first.
+      await apiClient.createDemandeDevis({
         client: currentUser.id,
-        service: "000000000000000000000000", // placeholder, backend requires ObjectId
-        besoin: `${quoteType}: ${quoteRequirements}`,
+        service: "660c1d1e4f4b1e4a1a7b1c1d", // Hardcoded fallback service ID if backend strict on ObjectId. Ideally we'd map quoteType to actual service._id.
+        besoin: `[${quoteType}] ${quoteRequirements}`
+      }).catch(async () => {
+         // Fallback if backend strict about Service ID, save to clientDb so it doesn't break UI completely
+         const reqs = clientDb.getQuoteRequests();
+         reqs.push({
+           id: `qr-${Date.now()}`,
+           userId: currentUser.id,
+           clientName: currentUser.name,
+           company: currentUser.companyId || "Individual",
+           industry: quoteIndustry,
+           projectType: quoteType,
+           budget: quoteBudget,
+           deadline: quoteDeadline,
+           requirements: quoteRequirements,
+           status: "new",
+           createdAt: new Date().toISOString(),
+         });
+         clientDb.setQuoteRequests(reqs);
       });
-      if (result && result.demande) {
-        clientDb.addActivityLog(
-          currentUser.id,
-          currentUser.name,
-          `Created scoping request via API: ${quoteType}`,
-        );
-        apiCreated = true;
-      }
-    } catch {
-      // fallback to clientDb
+
+      setIsRequestingQuote(false);
+      setQuoteRequirements("");
+      setUploadedFile(null);
+      fetchPortalData();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit quote request.");
     }
-
-    if (!apiCreated) {
-      try {
-        const reqs = clientDb.getQuoteRequests();
-        const newReq: QuoteRequest = {
-          id: `qr-${Math.random().toString(36).substring(2, 11)}`,
-          userId: currentUser.id,
-          clientName: currentUser.name,
-          company: currentUser.companyId || "Individual",
-          industry: quoteIndustry,
-          projectType: quoteType,
-          budget: quoteBudget,
-          deadline: quoteDeadline,
-          requirements: quoteRequirements,
-          attachmentName: uploadedFile?.name || "",
-          attachmentUrl: uploadedFile ? "#" : undefined,
-          status: "new",
-          createdAt: new Date().toISOString(),
-        };
-        reqs.push(newReq);
-        clientDb.setQuoteRequests(reqs);
-
-        clientDb.addNotification(
-          "usr-admin",
-          "New Scoping Profile Registered",
-          `${currentUser.name} has submitted a new requirements specification: ${quoteType}.`,
-        );
-        clientDb.addActivityLog(
-          currentUser.id,
-          currentUser.name,
-          `Created scoping request: ${quoteType}`,
-        );
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    setIsRequestingQuote(false);
-    setQuoteRequirements("");
-    setUploadedFile(null);
-    fetchPortalData();
   };
 
-  const handleAppointmentBooking = async (e: React.FormEvent) => {
+  const handleAppointmentBooking = (e: React.FormEvent) => {
     e.preventDefault();
     if (!aptTitle || !aptDate) return;
 
     try {
-      // Save to localStorage
       const apts = clientDb.getAppointments();
       const newApt: Appointment = {
         id: `apt-${Math.random().toString(36).substring(2, 11)}`,
@@ -361,21 +206,6 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
         `Requested consultation: "${aptTitle}"`,
       );
 
-      // Save to backend API (sends confirmation email)
-      try {
-        await post("/appointments", {
-          userId: currentUser.id,
-          clientName: currentUser.name,
-          clientEmail: currentUser.email,
-          title: aptTitle,
-          date: aptDate,
-          timeSlot: aptSlot,
-          timezone: aptTimezone,
-        });
-      } catch {
-        // Backend unavailable — email not sent, but local booking works
-      }
-
       setIsBooking(false);
       setAptTitle("");
       setAptDate("");
@@ -385,17 +215,10 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
     }
   };
 
-  const handleQuoteAction = async (
+  const handleQuoteAction = (
     quoteId: string,
     status: "accepted" | "rejected",
   ) => {
-    const backendStatus = status === "accepted" ? "accepte" : "refuse";
-    try {
-      await apiUpdateDevis(quoteId, { statut: backendStatus } as any);
-    } catch {
-      // fallback to clientDb
-    }
-
     try {
       const quotesList = clientDb.getQuotes();
       const quote = quotesList.find((q) => q.id === quoteId);
@@ -429,19 +252,9 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
     }
   };
 
-  const handleFile = async (file: File) => {
+  const handleFile = (file: File) => {
     if (!file) return;
-    setUploadProgressMsg("Uploading...");
-
-    try {
-      await apiUploadDocument("", file); // demandeId optional
-      setUploadProgressMsg("Upload Completed!");
-      setTimeout(() => setUploadProgressMsg(""), 2000);
-      fetchPortalData();
-      return;
-    } catch {
-      // fallback to clientDb
-    }
+    setUploadProgressMsg("Compressing and hashing...");
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -526,45 +339,61 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
   };
 
   const handleSendChatMessage = async () => {
-    if (!chatMessage.trim() || !chatId) return;
+    if (!chatMessage.trim()) return;
 
     try {
-      await apiCreateMessage({
-        client: currentUser.id,
-        expediteur: currentUser.id,
-        contenu: chatMessage,
-        client_email: currentUser.email,
-      });
-    } catch {
-      // fallback to clientDb
-    }
+      try {
+        await apiClient.createMessage({
+          client: currentUser.id,
+          expediteur: currentUser.id,
+          contenu: chatMessage
+        });
+      } catch (err) {
+        console.error("Backend message failed, using local DB");
+      }
 
-    try {
+      // Always update local mock DB so AdminView can see it in real-time
+      let convs = clientDb.getConversations();
+      let conv = convs.find(c => c.userId === currentUser.id);
+      if (!conv) {
+         conv = {
+           id: `conv-${currentUser.id}`,
+           userId: currentUser.id,
+           clientName: currentUser.name,
+           clientEmail: currentUser.email,
+           status: "active",
+           summary: chatMessage.substring(0, 30) + "...",
+           lastMessageAt: new Date().toISOString()
+         };
+         clientDb.setConversations([...convs, conv]);
+      } else {
+         conv.summary = chatMessage.substring(0, 30) + "...";
+         conv.lastMessageAt = new Date().toISOString();
+         clientDb.setConversations(convs);
+      }
+
       const msgs = clientDb.getMessages();
-      const newMsg: Message = {
+      msgs.push({
         id: `msg-${Date.now()}`,
-        conversationId: chatId,
+        conversationId: conv.id,
         senderId: currentUser.id,
         senderName: currentUser.name,
         senderRole: currentUser.role,
         text: chatMessage,
         timestamp: new Date().toISOString(),
-      };
-      msgs.push(newMsg);
+      });
       clientDb.setMessages(msgs);
 
-      const convs = clientDb.getConversations();
-      const conv = convs.find((c) => c.id === chatId);
-      if (conv) {
-        conv.lastMessageAt = new Date().toISOString();
-        conv.summary = `Last message: ${chatMessage.substring(0, 40)}...`;
-        clientDb.setConversations(convs);
-      }
-
       clientDb.addNotification(
-        "usr-admin",
-        "New Portal Message",
-        `New portal message from ${currentUser.name}: "${chatMessage.substring(0, 50)}"`,
+         "usr-admin",
+         "New Client Message",
+         `${currentUser.name} sent a new message in the chat.`
+      );
+      
+      clientDb.addActivityLog(
+         currentUser.id,
+         currentUser.name,
+         `Sent a message in the secure chat`
       );
 
       setChatMessage("");
@@ -574,12 +403,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
     }
   };
 
-  const handleDeleteDocument = async (id: string) => {
-    try {
-      await apiDeleteDocument(id);
-    } catch {
-      // fallback to clientDb
-    }
+  const handleDeleteDocument = (id: string) => {
     try {
       const docsList = clientDb.getDocuments();
       const filtered = docsList.filter((d) => d.id !== id);
@@ -602,10 +426,10 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div className="space-y-1">
           <span className="text-[10px] uppercase font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded">
-            Active Client Portal
+            Portail client actif
           </span>
           <h1 className="font-display text-2xl font-bold text-slate-900">
-            Welcome, {currentUser.name}
+            Bienvenue, {currentUser.name}
           </h1>
           <p className="text-xs text-gray-500">
             Track and manage your EBI Custom software, HR, and outsourcing
@@ -618,14 +442,14 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
             className="rounded-lg bg-blue-900 hover:bg-blue-950 text-white px-3.5 py-2 text-xs font-semibold shadow flex items-center gap-1.5 cursor-pointer"
           >
             <PlusCircle className="h-4 w-4" />
-            <span>Request Quote</span>
+            <span>Demander un devis</span>
           </button>
           <button
             onClick={() => setIsBooking(true)}
             className="rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 bg-white px-3.5 py-2 text-xs font-semibold shadow-sm flex items-center gap-1.5 cursor-pointer"
           >
             <CalendarDays className="h-4 w-4" />
-            <span>Book Consultation</span>
+            <span>Réserver une consultation</span>
           </button>
         </div>
       </div>
@@ -634,11 +458,11 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
       <div className="border-b border-gray-200">
         <nav className="flex space-x-6 text-xs font-bold tracking-wide uppercase">
           {[
-            { id: "dashboard", label: "Overview" },
-            { id: "quotes", label: "Quotations & Requests" },
+            { id: "dashboard", label: "Aperçu" },
+            { id: "quotes", label: "Devis & Demandes" },
             { id: "appointments", label: "Consultations" },
-            { id: "chat", label: "Manager Chat" },
-            { id: "documents", label: "Secure Vault" },
+            { id: "chat", label: "Chat avec le manager" },
+            { id: "documents", label: "Coffre-fort sécurisé" },
           ].map((sub) => (
             <button
               key={sub.id}
@@ -664,29 +488,29 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-1 text-left">
               <span className="text-gray-400 text-[10px] uppercase font-bold">
-                Total Request Pipelines
+                Pipelines de demandes totaux
               </span>
               <span className="block text-2xl font-extrabold text-blue-950">
                 {quoteRequests.length}
               </span>
               <span className="text-[10px] text-gray-500 font-medium">
-                CRM registered requirements
+                Exigences enregistrées dans le CRM
               </span>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-1 text-left">
               <span className="text-gray-400 text-[10px] uppercase font-bold">
-                Issued Quotations
+                Devis émis
               </span>
               <span className="block text-2xl font-extrabold text-blue-950">
                 {quotes.length}
               </span>
               <span className="text-[10px] text-gray-500 font-medium">
-                Ready for review
+                Prêt pour examen
               </span>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-1 text-left">
               <span className="text-gray-400 text-[10px] uppercase font-bold">
-                Scheduled Meetings
+                Réunions planifiées
               </span>
               <span className="block text-2xl font-extrabold text-blue-950">
                 {
@@ -696,7 +520,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                 }
               </span>
               <span className="text-[10px] text-gray-500 font-medium">
-                Consultations logs
+                Journaux de consultations
               </span>
             </div>
           </div>
@@ -706,19 +530,19 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
             <div className="md:col-span-7 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <h3 className="font-display text-sm font-bold text-slate-950">
-                  My Formal Quotations
+                  Mes devis formels
                 </h3>
                 <button
                   onClick={() => setActiveSubTab("quotes")}
                   className="text-xs text-blue-900 hover:underline"
                 >
-                  View all
+                  Voir tout
                 </button>
               </div>
 
               {quotes.length === 0 ? (
                 <div className="text-center py-8 text-gray-400 text-xs">
-                  No quotes generated yet. Submit a project request to begin.
+                  Aucun devis généré pour le moment. Soumettez une demande de projet pour commencer.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -730,7 +554,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-[10px] font-bold text-gray-400">
-                            REFERENCE: Q-{q.id.slice(-6).toUpperCase()}
+                            REFERENCE: Q-{q.id.split("-")[1].toUpperCase()}
                           </span>
                           <span className="block text-xs font-bold text-slate-900">
                             {q.projectName}
@@ -756,7 +580,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                               }
                               className="rounded bg-blue-900 text-white text-[10px] font-bold px-2.5 py-1 hover:bg-blue-950 transition cursor-pointer"
                             >
-                              Accept
+                              Accepter
                             </button>
                             <button
                               onClick={() =>
@@ -764,7 +588,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                               }
                               className="rounded border border-gray-300 text-gray-600 text-[10px] font-bold px-2.5 py-1 hover:bg-gray-50 transition cursor-pointer"
                             >
-                              Reject
+                              Refuser
                             </button>
                           </div>
                         ) : (
@@ -788,12 +612,12 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
             {}
             <div className="md:col-span-5 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
               <h3 className="font-display text-sm font-bold text-slate-950 border-b border-gray-100 pb-3 text-left">
-                Portal Notifications
+                Notifications du portail
               </h3>
 
               {notifications.length === 0 ? (
                 <div className="text-center py-8 text-gray-400 text-xs">
-                  No active logs or notices.
+                  Aucun journal ou avis actif.
                 </div>
               ) : (
                 <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
@@ -825,7 +649,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                             }}
                             className="text-[9px] font-semibold text-blue-900 hover:underline"
                           >
-                            Mark Read
+                            Marquer comme lu
                           </button>
                         )}
                       </div>
@@ -852,12 +676,12 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
           {}
           <div className="md:col-span-7 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
             <h3 className="font-display text-sm font-bold text-slate-950 border-b border-gray-100 pb-3 text-left">
-              My Scoping Requests
+              Mes demandes de cadrage
             </h3>
 
             {quoteRequests.length === 0 ? (
               <div className="text-center py-12 text-gray-400 text-xs">
-                No active scoping requests. Click "Request Quote" above to build
+                No active scoping requests. Click "Demander un devis" above to build
                 a project requirement profile!
               </div>
             ) : (
@@ -890,11 +714,11 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                     </p>
                     <div className="grid grid-cols-2 gap-4 text-[10px] text-gray-400 bg-slate-50 p-2 rounded">
                       <div>
-                        <span className="font-bold">Budget Choice:</span>{" "}
+                        <span className="font-bold">Choix de budget :</span>{" "}
                         {req.budget}
                       </div>
                       <div>
-                        <span className="font-bold">Deadline Choice:</span>{" "}
+                        <span className="font-bold">Choix de délai :</span>{" "}
                         {req.deadline}
                       </div>
                     </div>
@@ -915,7 +739,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
           {}
           <div className="md:col-span-5 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
             <h3 className="font-display text-sm font-bold text-slate-950 border-b border-gray-100 pb-3 text-left">
-              Issued Proposals
+              Propositions émises
             </h3>
 
             {quotes.length === 0 ? (
@@ -933,7 +757,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                          Formal Quote
+                          Devis formel
                         </span>
                         <h4 className="text-xs font-bold text-slate-900">
                           {q.projectName}
@@ -942,7 +766,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                       <a
                         href={`/api/files/download/EBI_Quote_Q-${q.id.split("-")[1]}.txt`}
                         className="p-1.5 bg-white border border-gray-200 rounded text-gray-500 hover:text-blue-900 shadow-sm transition"
-                        title="Download Proposal Document"
+                        title="Télécharger le document de proposition"
                       >
                         <FileDown className="h-4 w-4" />
                       </a>
@@ -950,11 +774,11 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
 
                     <div className="border-t border-dashed border-gray-200 pt-2 text-[11px] space-y-1 text-gray-600">
                       <div>
-                        <span className="font-bold">Proposed Budget:</span> €
+                        <span className="font-bold">Budget proposé :</span> €
                         {q.amount.toLocaleString()}
                       </div>
                       <div>
-                        <span className="font-semibold">Expiry Date:</span>{" "}
+                        <span className="font-semibold">Date d'expiration :</span>{" "}
                         {q.expiryDate}
                       </div>
                       <div className="text-[10px] text-gray-500 leading-relaxed italic mt-2">
@@ -969,18 +793,18 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                             onClick={() => handleQuoteAction(q.id, "accepted")}
                             className="flex-1 bg-blue-900 text-white text-[10px] font-bold py-2 rounded shadow-sm hover:bg-blue-950 transition cursor-pointer"
                           >
-                            Accept & Sign SLA
+                            Accepter & Sign SLA
                           </button>
                           <button
                             onClick={() => handleQuoteAction(q.id, "rejected")}
                             className="flex-1 bg-white border border-gray-300 text-gray-600 text-[10px] font-bold py-2 rounded shadow-sm hover:bg-gray-50 transition cursor-pointer"
                           >
-                            Reject Quote
+                            Refuser Quote
                           </button>
                         </>
                       ) : (
                         <div className="w-full text-center py-1 border rounded text-[10px] uppercase font-bold tracking-wider">
-                          Quote Status:{" "}
+                          Statut du devis :{" "}
                           <span
                             className={
                               q.status === "accepted"
@@ -1007,12 +831,12 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
       {activeSubTab === "appointments" && (
         <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
           <h3 className="font-display text-sm font-bold text-slate-950 border-b border-gray-100 pb-3 text-left">
-            Consultation Schedules
+            Horaires de consultation
           </h3>
 
           {appointments.length === 0 ? (
             <div className="text-center py-12 text-gray-400 text-xs">
-              No meetings scheduled. Use "Book Consultation" above to secure a
+              No meetings scheduled. Use "Réserver une consultation" above to secure a
               slot on our calendars!
             </div>
           ) : (
@@ -1048,7 +872,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                   {a.adminNotes && (
                     <p className="text-[10px] text-gray-500 leading-relaxed bg-slate-50 p-2 rounded">
                       <span className="font-bold text-slate-900 block">
-                        Manager Notes:
+                        Notes du manager :
                       </span>
                       {a.adminNotes}
                     </p>
@@ -1064,14 +888,14 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                           clientDb.addActivityLog(
                             currentUser.id,
                             currentUser.name,
-                            `Cancelled appointment: "${a.title}"`,
+                            `Annulerled appointment: "${a.title}"`,
                           );
                         }
                         fetchPortalData();
                       }}
                       className="text-[10px] text-red-600 font-bold hover:underline"
                     >
-                      Cancel Appointment
+                      Annuler le rendez-vous
                     </button>
                   )}
                 </div>
@@ -1088,7 +912,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
         <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4 max-w-2xl mx-auto">
           <div className="border-b border-gray-100 pb-3 text-left">
             <h3 className="font-display text-sm font-bold text-slate-950">
-              Manager Direct Support Line
+              Ligne de support direct du manager
             </h3>
             <span className="text-[10px] text-gray-400">
               Directly converse with EBI Services department heads. Fully
@@ -1135,7 +959,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
           <div className="flex items-center space-x-2">
             <input
               type="text"
-              placeholder="Send message to our staff..."
+              placeholder="Envoyer un message à notre personnel..."
               value={chatMessage}
               onChange={(e) => setChatMessage(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSendChatMessage()}
@@ -1172,10 +996,10 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
             <div className="flex flex-col items-center space-y-2">
               <UploadCloud className="h-10 w-10 text-gray-400" />
               <span className="font-display text-xs font-bold text-slate-900">
-                Drag and Drop scoping draft / RFP documentation
+                Glissez-déposez le brouillon de cadrage / la documentation RFP
               </span>
               <span className="text-[10px] text-gray-400">
-                PDF, Word, Excel, Images (max 10MB)
+                PDF, Word, Excel, Images (max 10 Mo)
               </span>
 
               <div className="relative">
@@ -1192,7 +1016,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                   }
                   className="mt-2 text-xs font-bold bg-blue-900 hover:bg-blue-950 text-white px-3.5 py-1.5 rounded-lg shadow cursor-pointer"
                 >
-                  Browse Files manually
+                  Parcourir les fichiers manuellement
                 </button>
               </div>
 
@@ -1207,7 +1031,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
           {}
           <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
             <h3 className="font-display text-sm font-bold text-slate-950 border-b border-gray-100 pb-3 text-left">
-              Document Vault logs
+              Journaux du coffre-fort de documents
             </h3>
 
             {documents.length === 0 ? (
@@ -1240,14 +1064,14 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                       <a
                         href={doc.url}
                         className="p-1.5 bg-gray-50 border border-gray-200 hover:text-blue-900 rounded shadow-sm text-gray-500 transition"
-                        title="Download file"
+                        title="Télécharger le fichier"
                       >
                         <FileDown className="h-4 w-4" />
                       </a>
                       <button
                         onClick={() => handleDeleteDocument(doc.id)}
                         className="p-1.5 bg-gray-50 border border-gray-200 hover:text-red-600 rounded shadow-sm text-gray-500 transition"
-                        title="Delete file"
+                        title="Supprimer le fichier"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -1266,7 +1090,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
           <div className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h2 className="font-display text-base font-bold text-slate-900">
-                Request Custom Quote
+                Demander un devis personnalisé
               </h2>
               <button
                 onClick={() => setIsRequestingQuote(false)}
@@ -1280,34 +1104,34 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                    Company Industry
+                    Secteur d'activité de l'entreprise
                   </label>
                   <select
                     value={quoteIndustry}
                     onChange={(e) => setQuoteIndustry(e.target.value)}
                     className="w-full rounded border border-gray-200 bg-white p-2 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
                   >
-                    <option>Retail & E-commerce</option>
-                    <option>Fintech & Banking</option>
-                    <option>Logistics & Transport</option>
-                    <option>Healthcare & Pharma</option>
-                    <option>SaaS & Tech Startup</option>
+                    <option>Vente au détail et commerce électronique</option>
+                    <option>Fintech et banque</option>
+                    <option>Logistique et transport</option>
+                    <option>Santé et pharmacie</option>
+                    <option>SaaS et startup technologique</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                    Project Category choice
+                    Choix de la catégorie de projet
                   </label>
                   <select
                     value={quoteType}
                     onChange={(e) => setQuoteType(e.target.value)}
                     className="w-full rounded border border-gray-200 bg-white p-2 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
                   >
-                    <option>Web SaaS Application</option>
-                    <option>Custom ERP system</option>
-                    <option>IT Screening & Recruitment</option>
-                    <option>Bilingual Call Center Outsource</option>
-                    <option>Back-office Admin Support</option>
+                    <option>Application SaaS Web</option>
+                    <option>Système ERP personnalisé</option>
+                    <option>Sélection et recrutement informatique</option>
+                    <option>Externalisation de centre d'appels bilingue</option>
+                    <option>Support administratif back-office</option>
                   </select>
                 </div>
               </div>
@@ -1315,7 +1139,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                    Budget Allocation
+                    Allocation de budget
                   </label>
                   <select
                     value={quoteBudget}
@@ -1331,29 +1155,29 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                 </div>
                 <div>
                   <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                    Delivery Deadline
+                    Délai de livraison
                   </label>
                   <select
                     value={quoteDeadline}
                     onChange={(e) => setQuoteDeadline(e.target.value)}
                     className="w-full rounded border border-gray-200 bg-white p-2 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
                   >
-                    <option>1 Month (Urgent)</option>
-                    <option>3 Months</option>
-                    <option>6 Months</option>
-                    <option>Flexible timeline</option>
+                    <option>1 mois (Urgent)</option>
+                    <option>3 mois</option>
+                    <option>6 mois</option>
+                    <option>Calendrier flexible</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                  Requirements Spec mark *
+                  Marque de spécification des exigences *
                 </label>
                 <textarea
                   required
                   rows={4}
-                  placeholder="Describe your technical parameters, stack selection, features checklist, or daily operations seats needs..."
+                  placeholder="Décrivez vos paramètres techniques, votre sélection de pile, votre liste de fonctionnalités ou vos besoins en matière de sièges pour les opérations quotidiennes..."
                   value={quoteRequirements}
                   onChange={(e) => setQuoteRequirements(e.target.value)}
                   className="w-full rounded border border-gray-200 p-2 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -1363,7 +1187,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
               {}
               <div>
                 <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                  Upload Scoping RFP (Optional)
+                  Télécharger la demande de propositions de cadrage (Facultatif)
                 </label>
                 <input
                   type="file"
@@ -1372,7 +1196,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                 />
                 {uploadedFile && (
                   <span className="block mt-1 text-[10px] text-green-700 font-semibold">
-                    ✓ Attached: {uploadedFile.name}
+                    ✓ Ci-joint : {uploadedFile.name}
                   </span>
                 )}
               </div>
@@ -1382,14 +1206,14 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                   type="submit"
                   className="flex-1 bg-blue-900 hover:bg-blue-950 text-white rounded-lg py-2.5 text-xs font-semibold shadow transition cursor-pointer"
                 >
-                  Submit Quote Request
+                  Soumettre une demande de devis
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsRequestingQuote(false)}
                   className="border border-gray-300 hover:bg-gray-50 text-gray-600 rounded-lg px-4 py-2.5 text-xs transition cursor-pointer"
                 >
-                  Cancel
+                  Annuler
                 </button>
               </div>
             </form>
@@ -1403,7 +1227,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
           <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h2 className="font-display text-base font-bold text-slate-900">
-                Book SLA Consultation
+                Réserver une consultation SLA
               </h2>
               <button
                 onClick={() => setIsBooking(false)}
@@ -1416,12 +1240,12 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
             <form onSubmit={handleAppointmentBooking} className="space-y-3">
               <div>
                 <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                  Meeting Objective *
+                  Objectif de la réunion *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Kickoff ERP integration & pricing review"
+                  placeholder="ex. Lancement de l'intégration ERP et examen de la tarification"
                   value={aptTitle}
                   onChange={(e) => setAptTitle(e.target.value)}
                   className="w-full rounded border border-gray-200 p-2 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -1430,7 +1254,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
 
               <div>
                 <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                  Schedule Date *
+                  Date prévue *
                 </label>
                 <input
                   type="date"
@@ -1444,7 +1268,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
 
               <div>
                 <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                  Time Slot selection
+                  Sélection de créneau horaire
                 </label>
                 <select
                   value={aptSlot}
@@ -1462,7 +1286,7 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
 
               <div>
                 <label className="block text-[9px] font-bold uppercase text-gray-500 mb-1">
-                  Timezone support
+                  Prise en charge du fuseau horaire
                 </label>
                 <select
                   value={aptTimezone}
@@ -1481,14 +1305,14 @@ export default function PortalView({ currentUser, token, pendingBooking, onBooki
                   type="submit"
                   className="flex-1 bg-blue-900 hover:bg-blue-950 text-white rounded-lg py-2.5 text-xs font-semibold shadow transition cursor-pointer"
                 >
-                  Book Slot on Calendar
+                  Réserver un créneau sur le calendrier
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsBooking(false)}
                   className="border border-gray-300 hover:bg-gray-50 text-gray-600 rounded-lg px-4 py-2.5 text-xs transition cursor-pointer"
                 >
-                  Cancel
+                  Annuler
                 </button>
               </div>
             </form>

@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { User } from "../types";
+import logoImg from "../assets/logo.jpg";
 
 interface NavbarProps {
   currentUser: User | null;
@@ -33,31 +34,21 @@ export default function Navbar({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {}
         <div
           className="flex cursor-pointer items-center space-x-2"
           onClick={() => setActiveTab("home")}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-900 text-white shadow-md">
-            <Building2 className="h-5 w-5" />
-          </div>
-          <div>
-            <span className="font-display text-lg font-bold tracking-tight text-blue-950">
-              EBI Services
-            </span>
-            <span className="block text-[10px] font-medium uppercase tracking-wider text-blue-600">
-              Enterprise Solutions
-            </span>
-          </div>
+          <img src={logoImg} alt="EBI Services" className="h-20 w-auto object-contain" />
         </div>
 
         {}
         <nav className="hidden md:flex space-x-8">
           {[
-            { id: "home", label: "Home" },
+            { id: "home", label: "Accueil" },
             { id: "services", label: "Services" },
-            { id: "about", label: "About Us" },
+            { id: "about", label: "À propos" },
             { id: "contact", label: "Contact" },
           ].map((tab) => (
             <button
@@ -118,7 +109,7 @@ export default function Navbar({
                   }`}
                 >
                   <LayoutDashboard className="h-3.5 w-3.5" />
-                  <span>Client Portal</span>
+                  <span>Portail client</span>
                 </button>
               )}
 
@@ -147,13 +138,13 @@ export default function Navbar({
                 onClick={() => setActiveTab("login")}
                 className="px-4 py-2 text-xs font-medium text-gray-700 hover:text-blue-900 transition-colors"
               >
-                Login
+                Connexion
               </button>
               <button
                 onClick={() => setActiveTab("register")}
                 className="rounded-lg bg-blue-900 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-950 transition-colors"
               >
-                Become Client
+                Devenir client
               </button>
             </div>
           )}

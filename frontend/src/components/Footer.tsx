@@ -7,6 +7,7 @@ import {
   Globe,
   ShieldCheck,
 } from "lucide-react";
+import logoImg from "../assets/logo.jpg";
 
 interface FooterProps {
   setActiveTab: (tab: string) => void;
@@ -20,57 +21,46 @@ export default function Footer({ setActiveTab }: FooterProps) {
           {}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-900 text-white">
-                <Building2 className="h-4 w-4" />
-              </div>
-              <span className="font-display text-base font-bold text-blue-950">
-                EBI Services
-              </span>
+              <img src={logoImg} alt="EBI Services" className="h-20 w-auto object-contain" />
             </div>
             <p className="text-xs leading-relaxed text-gray-500">
-              Elite custom software development, world-class IT recruitment, and
-              secure administrative tele-services & customer support. Operating
-              worldwide with custom SLAs.
+              Depuis plus de 8 ans, EBI Services accompagne ses partenaires à travers plus de 5 pays, en proposant des solutions adaptées à leurs besoins et à leurs enjeux.
             </p>
-            <div className="flex items-center space-x-2 text-[10px] font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded border border-green-100 w-fit">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span>Verified Secure Platform</span>
-            </div>
           </div>
 
           {}
           <div>
             <span className="block font-display text-xs font-semibold uppercase tracking-wider text-gray-900">
-              Our Offerings
+              Nos offres
             </span>
             <ul className="mt-4 space-y-2 text-xs">
               {[
                 {
-                  name: "Custom ERP & SaaS Systems",
+                  name: "Systèmes ERP et SaaS sur mesure",
                   action: () => {
                     setActiveTab("services");
                   },
                 },
                 {
-                  name: "Web & Mobile Applications",
+                  name: "Applications web et mobiles",
                   action: () => {
                     setActiveTab("services");
                   },
                 },
                 {
-                  name: "IT Technical Sourcing & Screening",
+                  name: "Recherche et sélection technique informatique",
                   action: () => {
                     setActiveTab("services");
                   },
                 },
                 {
-                  name: "Bilingual Call Center Support",
+                  name: "Support de centre d'appels bilingue",
                   action: () => {
                     setActiveTab("services");
                   },
                 },
                 {
-                  name: "Administrative Back Office",
+                  name: "Back-office administratif",
                   action: () => {
                     setActiveTab("services");
                   },
@@ -91,42 +81,36 @@ export default function Footer({ setActiveTab }: FooterProps) {
           {}
           <div>
             <span className="block font-display text-xs font-semibold uppercase tracking-wider text-gray-900">
-              Corporate Access
+              Accès entreprise
             </span>
             <ul className="mt-4 space-y-2 text-xs">
               {[
                 {
-                  name: "Secure Client Portal",
+                  name: "Portail client sécurisé",
                   action: () => {
                     setActiveTab("portal");
                   },
                 },
                 {
-                  name: "Request Meeting",
+                  name: "Demander une réunion",
                   action: () => {
                     setActiveTab("contact");
                   },
                 },
                 {
-                  name: "Get Custom Quotation",
+                  name: "Obtenir un devis personnalisé",
                   action: () => {
                     setActiveTab("portal");
                   },
                 },
                 {
-                  name: "Contact Form",
-                  action: () => {
-                    setActiveTab("contact");
-                  },
-                },
-                {
-                  name: "Privacy Policy",
+                  name: "Politique de confidentialité",
                   action: () => {
                     setActiveTab("privacy");
                   },
                 },
                 {
-                  name: "Terms of Use",
+                  name: "Conditions d'utilisation",
                   action: () => {
                     setActiveTab("terms");
                   },
@@ -147,24 +131,20 @@ export default function Footer({ setActiveTab }: FooterProps) {
           {}
           <div className="space-y-3">
             <span className="block font-display text-xs font-semibold uppercase tracking-wider text-gray-900">
-              Headquarters
+              Contactez-nous
             </span>
             <ul className="space-y-2 text-xs text-gray-500">
               <li className="flex items-center space-x-2">
-                <MapPin className="h-3.5 w-3.5 text-blue-900 flex-shrink-0" />
-                <span>12 Avenue des Champs-Élysées, Paris, France</span>
+                <Phone className="h-3.5 w-3.5 text-blue-900 flex-shrink-0" />
+                <a href="tel:+21656566533" className="hover:text-blue-900 transition-colors">Tunisie : +216 56 566 533</a>
               </li>
               <li className="flex items-center space-x-2">
                 <Phone className="h-3.5 w-3.5 text-blue-900 flex-shrink-0" />
-                <span>+33 1 74 88 99 00</span>
+                <a href="tel:+32460241740" className="hover:text-blue-900 transition-colors">Belgique : +32 460 24 17 40</a>
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="h-3.5 w-3.5 text-blue-900 flex-shrink-0" />
-                <span>contact@ebiservices.com</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <Globe className="h-3.5 w-3.5 text-blue-900 flex-shrink-0" />
-                <span>www.ebiservices.com</span>
+                <a href="mailto:servicesdossiers@gmail.com" className="hover:text-blue-900 transition-colors">servicesdossiers@gmail.com</a>
               </li>
             </ul>
           </div>
@@ -172,8 +152,7 @@ export default function Footer({ setActiveTab }: FooterProps) {
 
         <div className="mt-8 border-t border-gray-100 pt-6 text-center text-xs text-gray-400">
           <p>
-            © {new Date().getFullYear()} EBI Services. All rights reserved.
-            Registered SaaS Platform. Developed for Premium Operations.
+            © {new Date().getFullYear()} EBI Services. Tous droits réservés.
           </p>
         </div>
       </div>

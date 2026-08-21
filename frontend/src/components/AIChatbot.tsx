@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, JSX } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   MessageSquare,
   X,
@@ -13,155 +13,6 @@ import {
 
 import { clientDb } from "../clientDb";
 import { Lead } from "../types";
-import { post, get } from "../api/client";
-
-function renderMarkdown(text: string): JSX.Element[] {
-  const lines = text.split("\n");
-  const elements: JSX.Element[] = [];
-  let inList: { items: JSX.Element[]; key: string } | null = null;
-
-  function flushList() {
-    if (inList) {
-      elements.push(
-        <ul key={inList.key} className="list-disc pl-4 space-y-0.5 my-1.5 text-[11px]">
-          {inList.items}
-        </ul>
-      );
-      inList = null;
-    }
-  }
-
-  function inlineFormat(part: string, idx: number): JSX.Element {
-    const segments: JSX.Element[] = [];
-    let remaining = part;
-    let segIdx = 0;
-    const regex = /(\*\*(.+?)\*\*)|(`(.+?)`)/g;
-    let lastIndex = 0;
-    let match: RegExpExecArray | null;
-
-    while ((match = regex.exec(remaining)) !== null) {
-      if (match.index > lastIndex) {
-        segments.push(<span key={segIdx++}>{remaining.slice(lastIndex, match.index)}</span>);
-      }
-      if (match[1]) {
-        segments.push(<strong key={segIdx++} className="font-semibold text-blue-900">{match[2]}</strong>);
-      } else if (match[3]) {
-        segments.push(<code key={segIdx++} className="bg-gray-100 px-1 rounded text-[10px] font-mono">{match[4]}</code>);
-      }
-      lastIndex = regex.lastIndex;
-    }
-    if (lastIndex < remaining.length) {
-      segments.push(<span key={segIdx++}>{remaining.slice(lastIndex)}</span>);
-    }
-    return <React.Fragment key={idx}>{segments}</React.Fragment>;
-  }
-
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    if (trimmed === "") { i++; continue; }
-
-    if (trimmed.startsWith("|")) {
-      const tableRows: string[][] = [];
-      while (i < lines.length && lines[i].trim().startsWith("|")) {
-        const cells = lines[i].trim().split("|").filter(c => c !== "").map(c => c.trim());
-        if (cells.length > 0) tableRows.push(cells);
-        i++;
-      }
-      if (tableRows.length >= 2) {
-        const headerRow = tableRows[0];
-        const bodyRows = tableRows.slice(2);
-        if (bodyRows.length > 0) {
-          elements.push(
-            <div key={`tbl-${i}`} className="my-2">
-              <table className="w-full text-[11px] border-collapse rounded-lg overflow-hidden shadow-sm border border-gray-300">
-                <thead>
-                  <tr className="bg-blue-900">
-                    {headerRow.map((h, ci) => (
-                      <th key={ci} className="px-3 py-2 text-left font-semibold text-white text-[10px] uppercase tracking-wider border-r border-blue-800 last:border-r-0">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {bodyRows.map((row, ri) => (
-                    <tr key={ri} className={`${ri % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50/50 transition-colors`}>
-                      {row.map((cell, ci) => {
-                        const isFirst = ci === 0;
-                        return (
-                          <td key={ci} className={`px-3 py-1.5 border-t border-gray-200 text-[11px] ${isFirst ? "font-semibold text-blue-900 whitespace-nowrap" : "text-gray-700"} ${ci < row.length - 1 ? "border-r border-gray-100" : ""}`}>
-                            {cell}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          );
-          continue;
-        }
-      }
-    }
-
-    if (trimmed === "---") {
-      elements.push(<hr key={`hr-${i}`} className="my-2 border-gray-200" />);
-      i++; continue;
-    }
-
-    if (trimmed.startsWith("### ")) {
-      elements.push(
-        <h3 key={`h3-${i}`} className="text-[11px] font-bold text-blue-950 mt-2 mb-1">
-          {trimmed.slice(4)}
-        </h3>
-      );
-      i++; continue;
-    }
-
-    if (trimmed.startsWith("## ")) {
-      elements.push(
-        <h2 key={`h2-${i}`} className="text-xs font-bold text-blue-950 mt-2 mb-1">
-          {trimmed.slice(3)}
-        </h2>
-      );
-      i++; continue;
-    }
-
-    if (trimmed.startsWith("# ")) {
-      elements.push(
-        <h1 key={`h1-${i}`} className="text-sm font-bold text-blue-950 mt-2 mb-1">
-          {trimmed.slice(2)}
-        </h1>
-      );
-      i++; continue;
-    }
-
-    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-      const content = trimmed.slice(2);
-      const item = <li key={`li-${i}`}>{inlineFormat(content, 0)}</li>;
-      if (inList) {
-        inList.items.push(item);
-      } else {
-        inList = { items: [item], key: `list-${i}` };
-      }
-      i++; continue;
-    }
-
-    elements.push(
-      <p key={`p-${i}`} className="text-[11px] leading-relaxed mb-1.5">
-        {inlineFormat(line, 0)}
-      </p>
-    );
-    i++;
-  }
-
-  flushList();
-  return elements;
-}
 
 interface ChatMessage {
   id: string;
@@ -173,31 +24,24 @@ interface ChatMessage {
 interface AIChatbotProps {
   currentUser: any;
   onLeadSubmitSuccess?: () => void;
-  onOpenForm?: () => void;
-  onOpenPortal?: () => void;
-  onOpenBooking?: () => void;
 }
 
 export default function AIChatbot({
   currentUser,
   onLeadSubmitSuccess,
-  onOpenForm,
-  onOpenPortal,
-  onOpenBooking,
 }: AIChatbotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       sender: "bot",
-      text: "Hello! I am the EBI Services AI Assistant. I can help explain our custom software development workflows, IT recruitment capabilities, and customer support outsourcing solutions.\n\n**You can ask in English or French.**\n\n---\n\nBonjour ! Je suis l'assistant IA d'EBI Services. Je peux vous renseigner sur nos développements logiciels sur mesure, recrutement IT et solutions d'externalisation.\n\n**Vous pouvez poser vos questions en français ou en anglais.**",
+      text: "Bonjour ! Je suis l'assistant IA d'EBI Services. Je peux vous expliquer nos workflows de développement de logiciels sur mesure, nos capacités de recrutement informatique et nos solutions d'externalisation du support client. Comment puis-je vous aider aujourd'hui ?",
       timestamp: new Date(),
     },
   ]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showLeadForm, setShowLeadForm] = useState(false);
-  const [awaitingAppointmentConfirm, setAwaitingAppointmentConfirm] = useState(false);
 
   const [leadName, setLeadName] = useState(currentUser?.name || "");
   const [leadCompany, setLeadCompany] = useState(currentUser?.companyId || "");
@@ -206,10 +50,9 @@ export default function AIChatbot({
   const [leadCountry, setLeadCountry] = useState("France");
   const [leadDesc, setLeadDesc] = useState("");
   const [leadBudget, setLeadBudget] = useState("€10,000 - €25,000");
-  const [leadDeadline, setLeadDeadline] = useState("3 Months");
+  const [leadDélai, setLeadDélai] = useState("3 mois");
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const [conversationLang, setConversationLang] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -227,25 +70,8 @@ export default function AIChatbot({
     }
   }, [currentUser]);
 
-
-
-  // Detect language based on common patterns
-  const detectLang = (text: string): string => {
-    const frenchPattern = /[àâäéèêëîïôöùûüç]|^(bonjour|salut|je\s|j'|nous|vous|svp|s'il)/i;
-    const englishPattern = /^(hello|hi|hey|i\s|we\s|can\s|how\s|what\s|where\s|when\s|is\s|are\s|please)/i;
-    if (frenchPattern.test(text)) return "fr";
-    if (englishPattern.test(text)) return "en";
-    return "en";
-  };
-
   const handleSendMessage = async (textToSend: string) => {
     if (!textToSend.trim()) return;
-
-    // Compute language for this message (use existing or detect on first message)
-    const msgLang = conversationLang || detectLang(textToSend);
-    if (!conversationLang) {
-      setConversationLang(msgLang);
-    }
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -258,101 +84,63 @@ export default function AIChatbot({
     setInputText("");
     setIsLoading(true);
 
-    // Handle appointment confirmation response locally
-    if (awaitingAppointmentConfirm) {
-      setAwaitingAppointmentConfirm(false);
-      const q = textToSend.toLowerCase().trim();
-      const isAffirmative = /^(oui|ouais|ok|d'accord|bien sûr|bien sur|volontiers|je veux|vas-y|vas y|yes|yeah|yep|sure|absolutely|i do|i want|let's|lets|go ahead)/i.test(q) || q === "yes" || q === "oui";
-      const isNegative = /^(non|no|nope|pas maintenant|plus tard|not now|later)/i.test(q);
-      if (isAffirmative && !isNegative) {
-        setIsLoading(false);
-        if (currentUser && currentUser.role === "client") {
-          setIsOpen(false);
-          if (onOpenBooking) onOpenBooking();
-          else if (onOpenPortal) onOpenPortal();
-        } else {
-          const loginText = msgLang === "fr"
-            ? "Pour réserver une consultation, vous devez d'abord **vous connecter** en tant que **client** ou **créer un compte**.\n\nUtilisez le bouton **Connexion** en haut de la page."
-            : "To book a consultation, you need to **log in** as a **client** or **create an account**.\n\nUse the **Login** button at the top of the page.";
-          const loginMsg: ChatMessage = {
-            id: `bot-${Date.now()}`,
-            sender: "bot",
-            text: loginText,
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, loginMsg]);
-          setIsLoading(false);
-        }
-        return;
-      } else if (isNegative) {
-        const declineText = msgLang === "fr"
-          ? "D'accord, n'hésitez pas à revenir vers moi si vous changez d'avis."
-          : "Alright, feel free to come back if you change your mind.";
-        const declineMsg: ChatMessage = {
-          id: `bot-${Date.now()}`,
-          sender: "bot",
-          text: declineText,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, declineMsg]);
-        setIsLoading(false);
-        return;
+    setTimeout(() => {
+      let reply = "";
+      const lower = textToSend.toLowerCase();
+
+      if (
+        lower.includes("develop") ||
+        lower.includes("software") ||
+        lower.includes("erp") ||
+        lower.includes("custom") ||
+        lower.includes("web")
+      ) {
+        reply =
+          "EBI Services conçoit des logiciels sur mesure, des applications Web et des systèmes ERP intégrés ultra-performants. Notre équipe de développement gère la conception de l'architecture de bout en bout, les intégrations d'API et les créateurs de portails robustes. Nous sommes spécialisés dans React, Node et les structures cloud évolutives. Souhaitez-vous que j'ouvre notre outil de devis pour définir un projet technique ?";
+      } else if (
+        lower.includes("recruit") ||
+        lower.includes("talent") ||
+        lower.includes("candidate") ||
+        lower.includes("hire") ||
+        lower.includes("engineer")
+      ) {
+        reply =
+          "Par le biais de notre branche de recrutement informatique Premium, EBI recherche et sélectionne rigoureusement des développeurs et ingénieurs d'élite. Nous pré-évaluons techniquement les candidats afin que vous n'interviewiez que les 3 % des meilleurs talents correspondants. Nous prenons en charge la recherche de développeurs en Europe, en Amérique du Nord et dans le monde entier. Faites-nous savoir si vous souhaitez consulter nos directeurs de recrutement !";
+      } else if (
+        lower.includes("outsource") ||
+        lower.includes("call") ||
+        lower.includes("tele") ||
+        lower.includes("support") ||
+        lower.includes("customer")
+      ) {
+        reply =
+          "EBI Tele-Services propose un support client bilingue professionnel 24h/24 et 7j/7, du télémarketing sortant et de l'externalisation de back-office administratif. Nous maintenons des centres de contact sécurisés et de haute technologie avec des spécialistes hautement qualifiés. Nous pouvons gérer entièrement vos tickets de support ou vos campagnes de génération de leads. Souhaitez-vous une estimation de prix pour l'externalisation du support ?";
+      } else if (
+        lower.includes("quote") ||
+        lower.includes("quotation") ||
+        lower.includes("pricing") ||
+        lower.includes("price") ||
+        lower.includes("cost") ||
+        lower.includes("budget")
+      ) {
+        reply =
+          "Je serais ravi de vous guider ! EBI Services propose des stratégies de modèles de tarification flexibles en fonction du service. Ouvrons notre formulaire dynamique de cadrage de projet ci-dessous afin que vous puissiez saisir vos exigences exactes, votre budget et votre calendrier, et nous compilerons un devis instantané dans votre portail !";
+        setShowLeadForm(true);
+      } else {
+        reply =
+          "Je vous remercie. EBI Services est un fournisseur d'entreprise spécialisé dans le développement de logiciels sur mesure, le recrutement informatique d'élite et l'externalisation professionnelle du support client et du back-office. Faites-moi savoir à quel domaine se rapporte votre requête, ou n'hésitez pas à demander une consultation pour un devis instantané !";
       }
-      // Neither yes nor no — fall through to agent normally
-    }
 
-    // Try Python agent API first for AI-powered response
-    let agentUsed = false;
-    try {
-      const body: Record<string, string> = { query: textToSend, lang: msgLang };
-      const result = await post<{ response: string; query: string }>(
-        '/agent/query',
-        body,
-      );
-      if (result && result.response) {
-        const responseText = result.response;
-
-        const botMsg: ChatMessage = {
-          id: `bot-${Date.now()}`,
-          sender: "bot",
-          text: responseText,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, botMsg]);
-        setIsLoading(false);
-        agentUsed = true;
-
-        // If response is an appointment confirmation question, set flag
-        if (
-          responseText.includes("Would you like to **book an appointment") ||
-          responseText.includes("Souhaitez-vous **prendre un rendez-vous")
-        ) {
-          setAwaitingAppointmentConfirm(true);
-        }
-
-        // If response mentions form redirect, navigate to contact form
-        if (
-          responseText.toLowerCase().includes('formulaire') ||
-          responseText.toLowerCase().includes('contact form') ||
-          responseText.toLowerCase().startsWith('### contact form')
-        ) {
-          setTimeout(() => {
-            if (onOpenForm) onOpenForm();
-          }, 800);
-        }
-      }
-    } catch {}  // Error handled below
-
-    if (!agentUsed) {
-      const errorMsg: ChatMessage = {
+      const botMsg: ChatMessage = {
         id: `bot-${Date.now()}`,
         sender: "bot",
-        text: "L'agent EBI AI est actuellement indisponible. Veuillez reessayer dans quelques instants ou contacter notre equipe directement par formulaire.",
+        text: reply,
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, errorMsg]);
+
+      setMessages((prev) => [...prev, botMsg]);
       setIsLoading(false);
-    }
+    }, 850);
   };
 
   const autoRegisterLead = async (analysis: any) => {
@@ -388,7 +176,7 @@ export default function AIChatbot({
         {
           id: `lead-ok-${Date.now()}`,
           sender: "bot",
-          text: "[AI Notice]: I've automatically registered your project lead with EBI management! They will reach out to you shortly.",
+          text: "💼 [Avis IA] : J'ai automatiquement enregistré votre demande de projet auprès de la direction d'EBI ! Ils vous contacteront sous peu.",
           timestamp: new Date(),
         },
       ]);
@@ -414,7 +202,7 @@ export default function AIChatbot({
         country: leadCountry,
         projectDescription: leadDesc,
         budget: leadBudget,
-        deadline: leadDeadline,
+        deadline: leadDélai,
         status: "new",
         suggestedDepartment: leadDesc.toLowerCase().includes("recruit")
           ? "Recruitment"
@@ -447,7 +235,7 @@ export default function AIChatbot({
         {
           id: `form-success-${Date.now()}`,
           sender: "bot",
-          text: `Thank you, ${leadName}! Your project lead for "${leadDesc.substring(0, 30)}..." has been received. Our directors have been notified and will verify your requirements.`,
+          text: `Merci, ${leadName}! Votre demande de projet pour "${leadDesc.substring(0, 30)}..." a été reçue. Nos directeurs ont été informés et vérifieront vos exigences.`,
           timestamp: new Date(),
         },
       ]);
@@ -461,34 +249,22 @@ export default function AIChatbot({
 
   const quickActions = [
     {
-      label: "Software Development Workflow",
-      text: "Tell me about your custom Software Development services and ERP solutions.",
+      label: "Workflow de développement de logiciels",
+      text: "Parlez-moi de vos services de développement de logiciels sur mesure et de vos solutions ERP.",
     },
     {
-      label: "IT Sourcing & Recruitment",
-      text: "How does EBI help recruit and pre-vet technical engineering candidates?",
+      label: "Recherche et recrutement informatique",
+      text: "Comment EBI aide-t-elle à recruter et à pré-évaluer des candidats ingénieurs techniques ?",
     },
     {
-      label: "Tele-Services & Support",
-      text: "Can you provide outbound call center or inbound bilingual customer support?",
+      label: "Télé-services et support",
+      text: "Pouvez-vous fournir un centre d'appels sortant ou un support client bilingue entrant ?",
     },
     {
-      label: "Request an Instant Quote",
-      text: "I would like to request a quotation for a custom enterprise project.",
+      label: "Demander un devis instantané",
+      text: "Je souhaite demander un devis pour un projet d'entreprise sur mesure.",
     },
   ];
-  const handleOpenForm = () => {
-    const formMsg: ChatMessage = {
-      id: `bot-${Date.now()}`,
-      sender: "bot",
-      text: "### Contact Form\n\nI'm redirecting you to our contact form.\n\nPlease fill in your information :\n- Name\n- Email\n- Phone\n- Your request\n\nOur team will get back to you shortly.",
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, formMsg]);
-    setTimeout(() => {
-      if (onOpenForm) onOpenForm();
-    }, 800);
-  };
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
@@ -507,7 +283,7 @@ export default function AIChatbot({
                 </span>
                 <span className="text-[10px] text-blue-200 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                  Active Expert Assistant
+                  Assistant expert actif
                 </span>
               </div>
             </div>
@@ -551,7 +327,7 @@ export default function AIChatbot({
                       : "bg-white border border-gray-200 text-gray-800 rounded-tl-none leading-relaxed"
                   }`}
                 >
-                  {m.sender === "bot" ? renderMarkdown(m.text) : m.text}
+                  {m.text}
                 </div>
               </div>
             ))}
@@ -578,7 +354,7 @@ export default function AIChatbot({
                 <div className="flex items-center space-x-2 text-blue-950">
                   <Briefcase className="h-4 w-4" />
                   <span className="font-display text-xs font-bold uppercase tracking-wider">
-                    Instant Quote Lead Scoper
+                    Cadrage de demande de devis instantané
                   </span>
                 </div>
                 <p className="text-[11px] text-gray-600 leading-snug">
@@ -589,7 +365,7 @@ export default function AIChatbot({
                 <form onSubmit={handleFormSubmit} className="space-y-2">
                   <input
                     type="text"
-                    placeholder="Your Name *"
+                    placeholder="Votre nom *"
                     required
                     value={leadName}
                     onChange={(e) => setLeadName(e.target.value)}
@@ -597,7 +373,7 @@ export default function AIChatbot({
                   />
                   <input
                     type="text"
-                    placeholder="Company Name"
+                    placeholder="Nom de l'entreprise"
                     value={leadCompany}
                     onChange={(e) => setLeadCompany(e.target.value)}
                     className="w-full rounded border border-gray-200 bg-white p-2 text-xs focus:ring-1 focus:ring-blue-900 focus:outline-none"
@@ -605,7 +381,7 @@ export default function AIChatbot({
                   <div className="grid grid-cols-2 gap-1.5">
                     <input
                       type="email"
-                      placeholder="Email Address *"
+                      placeholder="Adresse e-mail *"
                       required
                       value={leadEmail}
                       onChange={(e) => setLeadEmail(e.target.value)}
@@ -613,7 +389,7 @@ export default function AIChatbot({
                     />
                     <input
                       type="tel"
-                      placeholder="Phone *"
+                      placeholder="Téléphone *"
                       required
                       value={leadPhone}
                       onChange={(e) => setLeadPhone(e.target.value)}
@@ -621,7 +397,7 @@ export default function AIChatbot({
                     />
                   </div>
                   <textarea
-                    placeholder="Project Description (e.g. ERP integration, recruitment support, call center outsourcing) *"
+                    placeholder="Description du projet (ex. intégration ERP, support au recrutement, externalisation de centre d'appels) *"
                     required
                     rows={3}
                     value={leadDesc}
@@ -631,7 +407,7 @@ export default function AIChatbot({
                   <div className="grid grid-cols-2 gap-1.5">
                     <div>
                       <label className="block text-[9px] text-gray-500 font-bold uppercase">
-                        Budget Range
+                        Fourchette de budget
                       </label>
                       <select
                         value={leadBudget}
@@ -647,16 +423,16 @@ export default function AIChatbot({
                     </div>
                     <div>
                       <label className="block text-[9px] text-gray-500 font-bold uppercase">
-                        Deadline
+                        Délai
                       </label>
                       <select
-                        value={leadDeadline}
-                        onChange={(e) => setLeadDeadline(e.target.value)}
+                        value={leadDélai}
+                        onChange={(e) => setLeadDélai(e.target.value)}
                         className="w-full rounded border border-gray-200 bg-white p-1.5 text-[10px] focus:ring-1 focus:ring-blue-900 focus:outline-none"
                       >
-                        <option>Immediate (1 mo)</option>
-                        <option>3 Months</option>
-                        <option>6 Months</option>
+                        <option>Immédiat (1 mois)</option>
+                        <option>3 mois</option>
+                        <option>6 mois</option>
                         <option>Flexible (2026)</option>
                       </select>
                     </div>
@@ -668,14 +444,14 @@ export default function AIChatbot({
                       disabled={isSubmittingForm}
                       className="flex-1 bg-blue-900 hover:bg-blue-950 text-white rounded py-2 text-xs font-semibold transition shadow-sm disabled:opacity-55"
                     >
-                      {isSubmittingForm ? "Submitting..." : "Register Lead"}
+                      {isSubmittingForm ? "Envoi en cours..." : "Enregistrer la demande"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowLeadForm(false)}
                       className="border border-gray-300 text-gray-600 rounded px-3 py-2 text-xs hover:bg-gray-100 transition"
                     >
-                      Cancel
+                      Annuler
                     </button>
                   </div>
                 </form>
@@ -689,19 +465,13 @@ export default function AIChatbot({
           {!showLeadForm && (
             <div className="p-2 border-t border-gray-150 bg-slate-50/50">
               <div className="flex flex-wrap gap-1.5 p-1 max-h-24 overflow-y-auto">
-                <button
-                  onClick={handleOpenForm}
-                  className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 border-0 px-3 py-1 text-[10px] text-white font-semibold hover:from-purple-700 hover:to-pink-700 shadow-sm transition"
-                >
-                  Contact Form
-                </button>
                 {quickActions.map((action, i) => (
                   <button
                     key={i}
                     onClick={() => handleSendMessage(action.text)}
                     className="rounded-full bg-white border border-gray-200 px-3 py-1 text-[10px] text-blue-900 font-semibold hover:bg-blue-50 hover:border-blue-300 hover:text-blue-950 shadow-sm text-left transition"
                   >
-                    {action.label}
+                    💡 {action.label}
                   </button>
                 ))}
               </div>
@@ -712,7 +482,7 @@ export default function AIChatbot({
           <div className="p-3 border-t border-gray-200 bg-white flex items-center space-x-2">
             <input
               type="text"
-              placeholder="Ask anything about our services..."
+              placeholder="Posez vos questions sur nos services..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) =>
